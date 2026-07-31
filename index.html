@@ -1,0 +1,851 @@
+<!doctype html>
+<html lang="th">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="theme-color" content="#0f766e">
+  <title>ทะเบียนผู้ป่วย DM–HT | รพ.สต.บ้านชมภูพานเหนือ</title>
+  <style>
+    :root{
+      --bg:#f3f7f6;--surface:#fff;--surface2:#f8faf9;--ink:#16302d;--muted:#647b77;
+      --line:#dbe8e5;--primary:#0f766e;--primary2:#115e59;--mint:#dff5ef;
+      --blue:#2563eb;--blue-bg:#eaf1ff;--orange:#d97706;--orange-bg:#fff2d8;
+      --red:#dc2626;--red-bg:#feecec;--shadow:0 12px 35px rgba(26,74,67,.09);
+    }
+    *{box-sizing:border-box} body{margin:0;background:var(--bg);color:var(--ink);
+      font-family:"Noto Sans Thai","Leelawadee UI",Tahoma,sans-serif}
+    button,input,select{font:inherit} button{cursor:pointer}
+    .shell{min-height:100vh}.topbar{background:linear-gradient(135deg,#0b5f58,#0f766e 55%,#168c80);
+      color:#fff;padding:24px clamp(18px,4vw,54px) 76px}
+    .brand{display:flex;align-items:center;justify-content:space-between;gap:18px;max-width:1500px;margin:auto}
+    .brand-left{display:flex;align-items:center;gap:14px}.mark{width:52px;height:52px;border-radius:16px;
+      display:grid;place-items:center;background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.24);
+      font-size:25px}.eyebrow{font-size:12px;letter-spacing:.08em;opacity:.75}
+    h1{font-size:clamp(21px,3vw,31px);line-height:1.15;margin:4px 0 0}.connection{display:flex;align-items:center;
+      gap:8px;padding:9px 13px;border-radius:999px;background:rgba(255,255,255,.12);font-size:13px}
+    .dot{width:9px;height:9px;border-radius:50%;background:#fbbf24;box-shadow:0 0 0 4px rgba(251,191,36,.15)}
+    .dot.ok{background:#6ee7b7}.dot.bad{background:#fca5a5}
+    main{max-width:1500px;margin:-50px auto 0;padding:0 clamp(14px,3vw,38px) 42px}
+    .kpis{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px}
+    .card{background:var(--surface);border:1px solid rgba(219,232,229,.8);border-radius:20px;box-shadow:var(--shadow)}
+    .kpi{padding:20px;display:flex;align-items:center;justify-content:space-between;min-height:114px}
+    .kpi-label{color:var(--muted);font-size:13px}.kpi-value{font-size:32px;font-weight:800;line-height:1.1;margin-top:7px}
+    .kpi-icon{width:48px;height:48px;border-radius:15px;display:grid;place-items:center;font-size:23px}
+    .i-green{background:var(--mint)}.i-blue{background:var(--blue-bg)}.i-orange{background:var(--orange-bg)}.i-red{background:var(--red-bg)}
+    .middle{display:grid;grid-template-columns:1.08fr .92fr;gap:14px;margin-top:14px}
+    .panel{padding:20px}.panel-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:18px}
+    .panel-title{font-size:17px;font-weight:800}.panel-sub{font-size:12px;color:var(--muted);margin-top:3px}
+    .village-chart{display:grid;gap:11px}.bar-row{display:grid;grid-template-columns:70px 1fr 44px;align-items:center;gap:10px;font-size:13px}
+    .bar-track{height:10px;background:#e9f0ee;border-radius:99px;overflow:hidden}.bar-fill{height:100%;border-radius:99px;
+      background:linear-gradient(90deg,#14b8a6,#0f766e);transition:width .35s}.bar-num{text-align:right;font-weight:700}
+    .age-chart{height:215px;display:flex;align-items:flex-end;justify-content:space-around;gap:12px;padding:12px 8px 0}
+    .age-col{height:100%;flex:1;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;min-width:38px}
+    .age-num{font-size:12px;font-weight:800;margin-bottom:6px}.age-bar{width:min(42px,75%);min-height:4px;background:linear-gradient(#60a5fa,#2563eb);
+      border-radius:9px 9px 3px 3px;transition:height .35s}.age-label{font-size:11px;color:var(--muted);margin-top:7px;text-align:center}
+    .color-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}.color-stat{border-radius:14px;padding:14px;border:1px solid transparent;cursor:pointer;transition:transform .15s,box-shadow .15s}
+    .color-stat:hover{transform:translateY(-2px);box-shadow:0 8px 18px rgba(15,60,53,.12)}.color-stat:focus{outline:3px solid rgba(15,118,110,.24);outline-offset:2px}
+    .color-stat .color-name{font-size:12px;font-weight:800}.color-stat .color-value{font-size:25px;font-weight:900;margin-top:5px}
+    .table-card{margin-top:14px;overflow:hidden}.toolbar{padding:18px 20px;display:flex;align-items:center;gap:10px;flex-wrap:wrap;
+      border-bottom:1px solid var(--line)}.search{position:relative;flex:1;min-width:240px}.search span{position:absolute;left:13px;top:11px;color:var(--muted)}
+    input,select,textarea{border:1px solid #ccdcda;border-radius:11px;background:#fff;color:var(--ink);padding:10px 12px;outline:none;font:inherit}
+    input:focus,select:focus,textarea:focus{border-color:#4da99f;box-shadow:0 0 0 3px rgba(15,118,110,.1)}
+    .search input{width:100%;padding-left:38px}.btn{border:0;border-radius:11px;padding:10px 15px;font-weight:700;display:inline-flex;
+      align-items:center;justify-content:center;gap:7px}.btn-primary{background:var(--primary);color:#fff}.btn-primary:hover{background:var(--primary2)}
+    .btn-soft{background:#edf5f3;color:var(--primary2)}.btn-danger{background:var(--red);color:#fff}.btn-ghost{background:#fff;border:1px solid var(--line);color:var(--ink)}
+    .table-wrap{overflow:auto;max-height:580px}table{border-collapse:separate;border-spacing:0;width:100%;min-width:1160px;font-size:13px}
+    th{position:sticky;top:0;z-index:2;background:#f4f8f7;color:#516b67;text-align:left;padding:12px 13px;border-bottom:1px solid var(--line);
+      white-space:nowrap;font-size:12px}td{padding:12px 13px;border-bottom:1px solid #edf2f1;white-space:nowrap;vertical-align:middle}
+    tbody tr:hover{background:#f8fbfa}.name{font-weight:750}.muted{color:var(--muted)}.badge{display:inline-flex;align-items:center;padding:4px 8px;
+      border-radius:999px;font-weight:750;font-size:11px}.dm{color:#1d4ed8;background:#e8f0ff}.ht{color:#b45309;background:#fff0d4}.both{color:#b91c1c;background:#fee8e8}
+    .none{color:#64748b;background:#eef2f1}.actions{display:flex;gap:6px}.icon-btn{width:32px;height:32px;border-radius:9px;border:1px solid var(--line);background:#fff}
+    .level{display:inline-flex;align-items:center;padding:4px 8px;border-radius:8px;font-weight:800;font-size:11px;border:1px solid transparent}
+    .level-green{color:#166534;background:#DCFCE7;border-color:#86EFAC}.level-yellow{color:#854D0E;background:#FEF9C3;border-color:#FDE047}
+    .level-orange{color:#9A3412;background:#FFEDD5;border-color:#FDBA74}.level-red{color:#991B1B;background:#FEE2E2;border-color:#FCA5A5}
+    .level-none{color:#64748B;background:#F1F5F9;border-color:#CBD5E1}
+    .icon-btn:hover{background:#edf5f3}.pagination{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:14px 20px;color:var(--muted);font-size:13px}
+    .pages{display:flex;align-items:center;gap:8px}.empty{text-align:center;padding:55px 20px;color:var(--muted)}.empty .big{font-size:34px;margin-bottom:8px}
+    .overlay{position:fixed;inset:0;background:rgba(10,35,31,.45);display:none;align-items:center;justify-content:center;padding:18px;z-index:50}
+    .overlay.show{display:flex}.modal{width:min(900px,100%);max-height:92vh;overflow:auto;background:#fff;border-radius:22px;box-shadow:0 24px 70px rgba(0,0,0,.23)}
+    .modal-head{position:sticky;top:0;z-index:3;background:#fff;padding:20px 22px;border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between}
+    .modal-title{font-size:19px;font-weight:800}.close{border:0;background:#eef4f2;border-radius:10px;width:36px;height:36px;font-size:19px}
+    .form-body{padding:20px 22px}.section-title{font-weight:800;margin:4px 0 12px;color:var(--primary2)}
+    .form-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:13px;margin-bottom:22px}.field{display:flex;flex-direction:column;gap:6px}
+    .field label{font-size:12px;font-weight:700;color:#536d69}.field input,.field select{width:100%}.span2{grid-column:span 2}
+    .required-star{color:#DC2626;font-weight:900;margin-left:3px}.required-note{font-size:12px;color:#991B1B;margin:-4px 0 14px}
+    .attachment-list{display:grid;gap:8px;margin-top:9px}.attachment-item{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:9px 11px;border:1px solid var(--line);border-radius:10px;background:#f8fbfa}.attachment-item button{white-space:nowrap}
+    .modal-foot{position:sticky;bottom:0;background:#fff;border-top:1px solid var(--line);padding:15px 22px;display:flex;justify-content:flex-end;gap:9px}
+    .toast-wrap{position:fixed;right:18px;bottom:18px;z-index:100;display:grid;gap:9px}.toast{min-width:260px;max-width:380px;background:#173b36;color:#fff;
+      padding:13px 16px;border-radius:12px;box-shadow:var(--shadow);animation:slide .2s}.toast.err{background:#991b1b}
+    .loader{width:16px;height:16px;border:2px solid rgba(255,255,255,.45);border-top-color:#fff;border-radius:50%;animation:spin .7s linear infinite}
+    .privacy{font-size:11px;color:rgba(255,255,255,.7);text-align:right}.refreshing{opacity:.6;pointer-events:none}
+    .account-row{display:flex;align-items:center;justify-content:flex-end;gap:8px}.login-btn{margin-top:8px;background:#fff;color:var(--primary2);padding:8px 13px}
+    .user-chip{margin-top:8px;padding:8px 12px;border-radius:10px;background:rgba(255,255,255,.14);font-size:12px;display:none}
+    .table-card.locked .toolbar,.table-card.locked .pagination,.table-card.locked thead{display:none}
+    .login-note{text-align:center;padding:58px 20px}.login-note .lock{font-size:37px;margin-bottom:10px}
+    .mobile-add{display:none;position:fixed;right:18px;bottom:18px;z-index:35;width:58px;height:58px;border-radius:50%;border:0;background:var(--primary);color:#fff;
+      font-size:30px;box-shadow:0 12px 28px rgba(15,118,110,.35)}
+    @keyframes spin{to{transform:rotate(360deg)}}@keyframes slide{from{transform:translateY(8px);opacity:0}}
+    @media(max-width:900px){.kpis{grid-template-columns:repeat(2,1fr)}.middle{grid-template-columns:1fr}.form-grid{grid-template-columns:repeat(2,1fr)}.privacy{display:none}}
+    @media(max-width:560px){.topbar{padding-bottom:65px}.brand{align-items:flex-start}.connection{padding:8px}.connection span:last-child{display:none}.kpis{grid-template-columns:1fr 1fr;gap:9px}
+      .kpi{padding:14px;min-height:96px}.kpi-value{font-size:25px}.kpi-icon{width:40px;height:40px}.form-grid{grid-template-columns:1fr}.span2{grid-column:auto}
+      .toolbar>*{width:100%}.search{min-width:100%}.pagination{align-items:flex-start;flex-direction:column}.color-grid{grid-template-columns:repeat(2,1fr)}
+      input,select,.btn{min-height:46px;font-size:16px}.overlay{padding:0;align-items:stretch}.modal{width:100%!important;max-height:100vh;height:100vh;border-radius:0}
+      .modal-head{padding:15px 17px}.form-body{padding:17px}.modal-foot{padding:12px 17px;gap:8px}.modal-foot .btn{flex:1}
+      .mobile-add.active{display:grid;place-items:center}.toast-wrap{left:12px;right:12px;bottom:82px}.toast{min-width:0;max-width:none;width:100%}}
+  </style>
+</head>
+<body>
+<div class="shell">
+  <header class="topbar">
+    <div class="brand">
+      <div class="brand-left">
+        <div class="mark">✚</div>
+        <div><div class="eyebrow">ระบบทะเบียนโรคไม่ติดต่อเรื้อรัง ปี 2569 · เวอร์ชัน 2</div><h1>ทะเบียนผู้ป่วยเบาหวานและความดันโลหิตสูง</h1></div>
+      </div>
+      <div>
+        <div class="connection"><i class="dot" id="statusDot"></i><span id="statusText">กำลังโหลดภาพรวม</span></div>
+        <div class="account-row"><div class="user-chip" id="userChip"></div><button class="btn login-btn" id="loginBtn">เข้าสู่ระบบ</button></div>
+        <div class="privacy">รพ.สต.บ้านชมภูพานเหนือ · ข้อมูลใช้เพื่อการดูแลผู้ป่วย</div>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <section class="kpis">
+      <article class="card kpi"><div><div class="kpi-label">ผู้ป่วยทั้งหมด</div><div class="kpi-value" id="kpiTotal">–</div></div><div class="kpi-icon i-green">👥</div></article>
+      <article class="card kpi"><div><div class="kpi-label">เบาหวาน (DM)</div><div class="kpi-value" id="kpiDM">–</div></div><div class="kpi-icon i-blue">◉</div></article>
+      <article class="card kpi"><div><div class="kpi-label">ความดันสูง (HT)</div><div class="kpi-value" id="kpiHT">–</div></div><div class="kpi-icon i-orange">♥</div></article>
+      <article class="card kpi"><div><div class="kpi-label">DM และ HT</div><div class="kpi-value" id="kpiBoth">–</div></div><div class="kpi-icon i-red">✚</div></article>
+    </section>
+
+    <section class="middle">
+      <article class="card panel">
+        <div class="panel-head"><div><div class="panel-title">ผู้ป่วยแยกตามหมู่บ้าน</div><div class="panel-sub">จำนวนผู้ป่วยในแต่ละหมู่</div></div></div>
+        <div class="village-chart" id="villageChart"><div class="empty">กำลังโหลดข้อมูล…</div></div>
+      </article>
+      <article class="card panel">
+        <div class="panel-head"><div><div class="panel-title">ช่วงอายุผู้ป่วย</div><div class="panel-sub">กระจายตามกลุ่มอายุ</div></div><div id="avgAge" class="badge none">เฉลี่ย – ปี</div></div>
+        <div class="age-chart" id="ageChart"></div>
+      </article>
+    </section>
+
+    <section class="middle">
+      <article class="card panel">
+        <div class="panel-head"><div><div class="panel-title">ระดับค่าน้ำตาล</div><div class="panel-sub">จำนวนผู้ป่วยแยกตามเกณฑ์สี</div></div></div>
+        <div class="color-grid" id="sugarColorSummary"></div>
+      </article>
+      <article class="card panel">
+        <div class="panel-head"><div><div class="panel-title">ระดับความดันโลหิต</div><div class="panel-sub">ใช้ครั้งที่ 2 หากมี มิฉะนั้นใช้ครั้งที่ 1</div></div></div>
+        <div class="color-grid" id="bpColorSummary"></div>
+      </article>
+    </section>
+
+    <section class="card table-card locked" id="dataCard">
+      <div class="toolbar">
+        <div class="search"><span>⌕</span><input id="searchInput" autocomplete="off" placeholder="ค้นหา HN ชื่อ นามสกุล หรือบ้านเลขที่"></div>
+        <select id="monthFilter" aria-label="กรองตามเดือน"><option value="">ทุกเดือน</option></select>
+        <select id="villageFilter" aria-label="กรองตามหมู่"><option value="">ทุกหมู่</option></select>
+        <select id="diseaseFilter" aria-label="กรองตามโรค">
+          <option value="">ทุกกลุ่มโรค</option><option value="DM">DM</option><option value="HT">HT</option><option value="BOTH">DM และ HT</option>
+          <option value="CVA">Old CVA</option><option value="HLP">Hyperlipidaemia</option>
+          <option value="CKD1">CKD ระยะ 1</option><option value="CKD2">CKD ระยะ 2</option><option value="CKD3">CKD ระยะ 3</option><option value="CKD4">CKD ระยะ 4</option><option value="CKD5">CKD ระยะ 5</option>
+          <option value="NONE">ยังไม่ระบุ</option>
+        </select>
+        <button class="btn btn-soft" id="refreshBtn">↻ รีเฟรช</button>
+        <button class="btn btn-soft" id="formatSheetBtn" style="display:none">▦ จัดรูปแบบ GS</button>
+        <button class="btn btn-soft" id="changePasswordBtn" style="display:none">🔑 เปลี่ยนรหัสผ่าน</button>
+        <button class="btn btn-soft" id="exportBtn">⇩ ดาวน์โหลด Excel</button>
+        <button class="btn btn-soft" id="summaryExportBtn">⇩ สรุปรายหมู่</button>
+        <button class="btn btn-soft" id="referralBtn">⇄ ส่งต่อ–รับกลับ</button>
+        <button class="btn btn-primary" id="addBtn" style="display:none">＋ เพิ่มผู้ป่วย</button>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr>
+            <th>ลำดับ</th><th>วันที่ลงข้อมูล</th><th>HN</th><th>ชื่อ–สกุล</th><th>วันเกิด</th><th>อายุ</th><th>เบอร์โทรศัพท์</th><th>ที่อยู่</th><th>นน./สส.</th>
+            <th>ความดัน</th><th>น้ำตาล</th><th>นัดรับยา</th><th>รับยาที่</th><th>โรค</th><th>สถานะส่งต่อ</th><th>ประวัติการรักษา</th><th>จัดการ</th>
+          </tr></thead>
+          <tbody id="tableBody"><tr><td><div class="login-note"><div class="lock">🔒</div><strong>เข้าสู่ระบบเพื่อดูรายชื่อผู้ป่วย</strong><div class="panel-sub">หน้าหลักแสดงเฉพาะข้อมูลภาพรวมที่ไม่ระบุตัวบุคคล</div></div></td></tr></tbody>
+        </table>
+      </div>
+      <div class="pagination"><div id="resultText">0 รายการ</div><div class="pages"><button class="btn btn-ghost" id="prevBtn">‹ ก่อนหน้า</button><span id="pageText">หน้า 1 / 1</span><button class="btn btn-ghost" id="nextBtn">ถัดไป ›</button></div></div>
+    </section>
+
+    <section class="card table-card locked" id="referralCard" style="margin-top:18px">
+      <div class="toolbar">
+        <div><div class="panel-title">ระบบส่งต่อ–รับกลับ</div><div class="panel-sub">รพ.พระอาจารย์แบน ธนากะโร · สรุปตามเดือนที่ทำรายการ</div></div>
+        <select id="referralMonth"><option value="">ทุกเดือน</option></select>
+        <button class="btn btn-soft" id="referralExportBtn">⇩ ดาวน์โหลดสรุป</button>
+        <button class="btn btn-primary" id="newReferralBtn">＋ ทำรายการ</button>
+      </div>
+      <div class="kpis" style="padding:0 18px 18px">
+        <article class="card kpi color-stat" role="button" tabindex="0" onclick="openReferralPatients('sent')"><div><div class="kpi-label">ส่งต่อในเดือน</div><div class="kpi-value" id="refSent">0</div><div class="panel-sub">กดดูรายชื่อ</div></div><div class="kpi-icon i-orange">↗</div></article>
+        <article class="card kpi color-stat" role="button" tabindex="0" onclick="openReferralPatients('returned')"><div><div class="kpi-label">รับกลับในเดือน</div><div class="kpi-value" id="refReturned">0</div><div class="panel-sub">กดดูรายชื่อ</div></div><div class="kpi-icon i-green">↙</div></article>
+        <article class="card kpi color-stat" role="button" tabindex="0" onclick="openReferralPatients('current')"><div><div class="kpi-label">กำลังส่งต่อปัจจุบัน</div><div class="kpi-value" id="refCurrent">0</div><div class="panel-sub">กดดูรายชื่อ</div></div><div class="kpi-icon i-red">⌛</div></article>
+      </div>
+      <div class="table-wrap"><table><thead><tr><th>วันที่</th><th>สถานะ</th><th>HN</th><th>ชื่อ–สกุล</th><th>หมู่</th><th>เหตุผล/การวินิจฉัย</th><th>วันนัด/รับกลับ</th><th>หมายเหตุ</th><th>จัดการ</th></tr></thead><tbody id="referralBody"><tr><td colspan="9"><div class="login-note">กรุณาเข้าสู่ระบบ</div></td></tr></tbody></table></div>
+    </section>
+  </main>
+</div>
+
+<div class="overlay" id="loginOverlay" role="dialog" aria-modal="true" aria-labelledby="loginTitle">
+  <form class="modal" id="loginForm" style="width:min(430px,100%)">
+    <div class="modal-head"><div><div class="modal-title" id="loginTitle">เข้าสู่ระบบ</div><div class="panel-sub">ระบบทะเบียนผู้ป่วย DM–HT</div></div><button type="button" class="close" data-login-close>×</button></div>
+    <div class="form-body">
+      <div class="form-grid" style="grid-template-columns:1fr">
+        <div class="field"><label>ชื่อผู้ใช้</label><input name="username" autocomplete="username" required></div>
+        <div class="field"><label>รหัสผ่าน</label><input name="password" type="password" autocomplete="current-password" required></div>
+      </div>
+      <div class="panel-sub">ผู้ใช้รายหมู่จะเห็นเฉพาะผู้ป่วยในหมู่บ้านที่รับผิดชอบ</div>
+    </div>
+    <div class="modal-foot"><button type="button" class="btn btn-ghost" data-login-close>ยกเลิก</button><button type="submit" class="btn btn-primary" id="loginSubmit">เข้าสู่ระบบ</button></div>
+  </form>
+</div>
+<div class="overlay" id="passwordOverlay" role="dialog" aria-modal="true" aria-labelledby="passwordTitle">
+  <form class="modal" id="passwordForm" style="width:min(460px,100%)"><div class="modal-head"><div><div class="modal-title" id="passwordTitle">เปลี่ยนรหัสผ่าน Admin</div><div class="panel-sub">หลังเปลี่ยนจะต้องเข้าสู่ระบบใหม่ทุกอุปกรณ์</div></div><button type="button" class="close" data-password-close>×</button></div>
+  <div class="form-body"><div class="form-grid" style="grid-template-columns:1fr"><div class="field"><label>รหัสผ่านปัจจุบัน <span class="required-star">*</span></label><input name="currentPassword" type="password" autocomplete="current-password" required></div><div class="field"><label>รหัสผ่านใหม่ <span class="required-star">*</span></label><input name="newPassword" type="password" autocomplete="new-password" minlength="8" required><div class="panel-sub">อย่างน้อย 8 ตัว และมีทั้งตัวอักษรกับตัวเลข</div></div><div class="field"><label>ยืนยันรหัสผ่านใหม่ <span class="required-star">*</span></label><input name="confirmPassword" type="password" autocomplete="new-password" minlength="8" required></div></div></div>
+  <div class="modal-foot"><button type="button" class="btn btn-ghost" data-password-close>ยกเลิก</button><button type="submit" class="btn btn-primary" id="savePasswordBtn">เปลี่ยนรหัสผ่าน</button></div></form>
+</div>
+
+<div class="overlay" id="colorPatientsOverlay" role="dialog" aria-modal="true" aria-labelledby="colorPatientsTitle">
+  <div class="modal" style="width:min(920px,100%)">
+    <div class="modal-head"><div><div class="modal-title" id="colorPatientsTitle">รายชื่อผู้ป่วยตามระดับสี</div><div class="panel-sub" id="colorPatientsSub"></div></div><button type="button" class="close" data-color-close>×</button></div>
+    <div class="table-wrap" style="max-height:65vh">
+      <table style="min-width:760px">
+        <thead><tr><th>ลำดับ</th><th>วันที่ลงข้อมูล</th><th>HN</th><th>ชื่อ–สกุล</th><th>หมู่</th><th id="colorValueHeader">ค่า</th><th>ระดับ</th></tr></thead>
+        <tbody id="colorPatientsBody"></tbody>
+      </table>
+    </div>
+    <div class="modal-foot"><button type="button" class="btn btn-primary" data-color-close>ปิด</button></div>
+  </div>
+</div>
+
+<div class="overlay" id="formOverlay" role="dialog" aria-modal="true" aria-labelledby="formTitle">
+  <form class="modal" id="patientForm">
+    <div class="modal-head"><div><div class="modal-title" id="formTitle">เพิ่มข้อมูลผู้ป่วย</div><div class="panel-sub">กรอกข้อมูลให้ครบตามทะเบียน</div></div><button type="button" class="close" data-close>×</button></div>
+    <div class="form-body">
+      <div class="section-title">ข้อมูลบุคคลและที่อยู่</div>
+      <div class="required-note"><span class="required-star">*</span> จำเป็นต้องกรอกก่อนบันทึกข้อมูล</div>
+      <div class="form-grid">
+        <div class="field"><label>วันที่ลงข้อมูล <span class="required-star">*</span></label><input name="recordDate" type="date" required></div>
+        <div class="field"><label>HN <span class="required-star">*</span></label><input name="hn" required inputmode="numeric"></div>
+        <div class="field"><label>ชื่อ <span class="required-star">*</span></label><input name="firstName" required></div>
+        <div class="field"><label>สกุล <span class="required-star">*</span></label><input name="lastName" required></div>
+        <div class="field"><label>วันเดือนปีเกิด (พ.ศ.)</label><input name="birthDate" inputmode="numeric" placeholder="เช่น 15/08/2503" enterkeyhint="next"></div>
+        <div class="field"><label>อายุ (คำนวณอัตโนมัติ)</label><input name="age" type="number" min="0" max="130" readonly></div>
+        <div class="field"><label>เบอร์โทรศัพท์</label><input name="phone" type="tel" inputmode="tel" placeholder="เช่น 0812345678"></div>
+        <div class="field span2"><label>บ้านเลขที่</label><input name="houseNo"></div>
+        <div class="field"><label>หมู่</label><input name="village" inputmode="numeric"></div>
+        <div class="field"><label>รับยาที่</label><input name="medicationAt" value="รพ.สต."></div>
+      </div>
+      <div class="section-title">ข้อมูลสุขภาพ</div>
+      <div class="form-grid">
+        <div class="field"><label>น้ำหนัก (กก.) <span class="required-star">*</span></label><input name="weight" type="number" step="0.1" min="0" required></div>
+        <div class="field"><label>ส่วนสูง (ซม.) <span class="required-star">*</span></label><input name="height" type="number" step="0.1" min="0" required></div>
+        <div class="field"><label>รอบเอว (ซม.) <span class="required-star">*</span></label><input name="waist" type="number" step="0.1" min="0" required></div>
+        <div class="field"><label>ชีพจร (ครั้ง/นาที) <span class="required-star">*</span></label><input name="pulse" type="number" min="0" required></div>
+        <div class="field"><label>ความดัน ครั้งที่ 1 <span class="required-star">*</span></label><input name="bp1" inputmode="numeric" placeholder="เช่น 138/82" enterkeyhint="next" pattern="[0-9]{2,3}\s*/\s*[0-9]{2,3}" title="กรอกในรูปแบบ 138/82" required></div>
+        <div class="field"><label>ความดัน ครั้งที่ 2</label><input name="bp2" inputmode="numeric" placeholder="กรณีครั้งแรก ≥ 140/90" enterkeyhint="next"></div>
+        <div class="field"><label>น้ำตาล (mg/dL) <span class="required-star">*</span></label><input name="bloodSugar" type="number" step="0.1" min="0" required></div>
+        <div class="field"><label>วันนัดครั้งต่อไป <span class="required-star">*</span></label><input name="appointmentDate" type="date" required></div>
+      </div>
+      <div class="section-title">กลุ่มโรค</div>
+      <div class="form-grid">
+        <div class="field"><label>DM</label><select name="dm"><option value="">ไม่ระบุ</option><option value="✓">เป็น DM</option></select></div>
+        <div class="field"><label>HT</label><select name="ht"><option value="">ไม่ระบุ</option><option value="✓">เป็น HT</option></select></div>
+        <div class="field"><label>Old CVA</label><select name="oldCva"><option value="">ไม่ระบุ</option><option value="✓">เป็น Old CVA</option></select></div>
+        <div class="field"><label>Hyperlipidaemia</label><select name="hyperlipidaemia"><option value="">ไม่ระบุ</option><option value="✓">เป็น Hyperlipidaemia</option></select></div>
+        <div class="field"><label>CKD</label><select name="ckdStage"><option value="">ไม่ระบุ</option><option value="1">ระยะ 1</option><option value="2">ระยะ 2</option><option value="3">ระยะ 3</option><option value="4">ระยะ 4</option><option value="5">ระยะ 5</option></select></div>
+      </div>
+      <div class="section-title">ไฟล์ประวัติการรักษาของ visit นี้</div>
+      <div class="field"><label>แนบรูปภาพหรือ PDF (ไม่เกิน 3 ไฟล์ · ไฟล์ละไม่เกิน 5 MB)</label><input name="visitFiles" type="file" accept="image/jpeg,image/png,image/webp,application/pdf" multiple></div>
+      <div class="attachment-list" id="existingAttachments"></div>
+    </div>
+    <div class="modal-foot"><button type="button" class="btn btn-ghost" data-close>ยกเลิก</button><button type="submit" class="btn btn-primary" id="saveBtn">บันทึกข้อมูล</button></div>
+  </form>
+</div>
+
+<div class="overlay" id="deleteOverlay" role="alertdialog" aria-modal="true">
+  <div class="modal" style="width:min(450px,100%)">
+    <div class="modal-head"><div class="modal-title">ยืนยันการลบข้อมูล</div><button class="close" data-delete-close>×</button></div>
+    <div class="form-body"><p>ต้องการลบข้อมูลของ <strong id="deleteName"></strong> ใช่หรือไม่?</p><p class="muted">เมื่อลบแล้ว ระบบจะนำแถวออกจาก Google Sheet</p></div>
+    <div class="modal-foot"><button class="btn btn-ghost" data-delete-close>ยกเลิก</button><button class="btn btn-danger" id="confirmDelete">ลบข้อมูล</button></div>
+  </div>
+</div>
+
+<div class="overlay" id="referralOverlay" role="dialog" aria-modal="true" aria-labelledby="referralTitle">
+  <form class="modal" id="referralForm" style="width:min(720px,100%)">
+    <div class="modal-head"><div><div class="modal-title" id="referralTitle">บันทึกส่งต่อ–รับกลับ</div><div class="panel-sub">รพ.พระอาจารย์แบน ธนากะโร</div></div><button type="button" class="close" data-referral-close>×</button></div>
+    <div class="form-body"><div class="required-note"><span class="required-star">*</span> จำเป็นต้องกรอก</div><div class="form-grid">
+      <div class="field"><label>วันที่ทำรายการ <span class="required-star">*</span></label><input name="referralDate" type="date" required></div>
+      <div class="field"><label>ประเภท <span class="required-star">*</span></label><select name="type" required><option value="ส่งต่อ">ส่งต่อ</option><option value="รับกลับ">รับกลับ</option></select></div>
+      <div class="field span2"><label>ผู้ป่วย <span class="required-star">*</span></label><select name="patientKey" required></select></div>
+      <div class="field span2"><label>เหตุผล/การวินิจฉัย</label><textarea name="reason" rows="3"></textarea></div>
+      <div class="field"><label>วันนัด/วันรับกลับ</label><input name="followupDate" type="date"></div>
+      <div class="field"><label>สถานพยาบาล</label><input value="รพ.พระอาจารย์แบน ธนากะโร" readonly></div>
+      <div class="field span2"><label>หมายเหตุ</label><textarea name="note" rows="3"></textarea></div>
+    </div></div>
+    <div class="modal-foot"><button type="button" class="btn btn-ghost" data-referral-close>ยกเลิก</button><button type="submit" class="btn btn-primary" id="saveReferralBtn">บันทึกรายการ</button></div>
+  </form>
+</div>
+<div class="overlay" id="referralPatientsOverlay" role="dialog" aria-modal="true">
+  <div class="modal" style="width:min(900px,100%)"><div class="modal-head"><div><div class="modal-title" id="referralPatientsTitle">รายชื่อผู้ป่วย</div><div class="panel-sub" id="referralPatientsSub"></div></div><button type="button" class="close" data-referral-patients-close>×</button></div>
+  <div class="table-wrap"><table><thead><tr><th>ลำดับ</th><th>วันที่</th><th>HN</th><th>ชื่อ–สกุล</th><th>หมู่</th><th>สถานะ</th><th>เหตุผล/การวินิจฉัย</th></tr></thead><tbody id="referralPatientsBody"></tbody></table></div>
+  <div class="modal-foot"><button type="button" class="btn btn-primary" data-referral-patients-close>ปิด</button></div></div>
+</div>
+<div class="overlay" id="visitFilesOverlay" role="dialog" aria-modal="true">
+  <div class="modal" style="width:min(650px,100%)"><div class="modal-head"><div><div class="modal-title">ไฟล์ประวัติการรักษา</div><div class="panel-sub" id="visitFilesSub"></div></div><button type="button" class="close" data-visit-files-close>×</button></div><div class="form-body"><div class="attachment-list" id="visitFilesList"></div></div><div class="modal-foot"><button type="button" class="btn btn-primary" data-visit-files-close>ปิด</button></div></div>
+</div>
+<div class="toast-wrap" id="toastWrap"></div>
+<button class="mobile-add" id="mobileAddBtn" aria-label="เพิ่มข้อมูลผู้ป่วย">＋</button>
+
+<script>
+  const GAS_URL = "https://script.google.com/macros/s/AKfycbx9y2f2fVFf2dGYV1LDuC9xISrqghO0vDg0PZjLE5ILkN0Nxf6utz3gAKCqqkIdoMt2/exec";
+  const PAGE_SIZE = 20;
+  const fields = ["recordDate","hn","firstName","lastName","birthDate","age","phone","houseNo","village","weight","height","waist","bp1","bp2","pulse","bloodSugar","appointmentDate","medicationAt","dm","ht","oldCva","hyperlipidaemia","ckdStage"];
+  let records = [], filtered = [], dashboardData = [], referrals = [], page = 1, editing = null, deleting = null, auth = null;
+
+  const $ = (s) => document.querySelector(s);
+  const storageGet = key => { try{return sessionStorage.getItem(key)||""}catch{return ""} };
+  const storageSet = (key,value) => { try{sessionStorage.setItem(key,value)}catch{} };
+  const storageRemove = key => { try{sessionStorage.removeItem(key)}catch{} };
+  const esc = (v) => String(v ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[c]));
+  const isYes = (v) => ["✓","1","true","yes","y","dm","ht","เป็น"].includes(String(v ?? "").trim().toLowerCase());
+  const fmt = (v) => (v === null || v === undefined || v === "") ? "–" : esc(v);
+  const parseAttachments = value => { try{const x=Array.isArray(value)?value:JSON.parse(String(value||"[]"));return Array.isArray(x)?x.filter(a=>a&&a.id):[]}catch{return[]} };
+  const fileToPayload = file => new Promise((resolve,reject)=>{const reader=new FileReader();reader.onload=()=>resolve({name:file.name,mimeType:file.type,size:file.size,base64:String(reader.result||"").split(",")[1]||""});reader.onerror=()=>reject(new Error("อ่านไฟล์ "+file.name+" ไม่สำเร็จ"));reader.readAsDataURL(file)});
+  const disease = r => isYes(r.dm) && isYes(r.ht) ? "BOTH" : isYes(r.dm) ? "DM" : isYes(r.ht) ? "HT" : "NONE";
+  const diseaseBadge = r => {
+    const d = disease(r);
+    return d === "BOTH" ? '<span class="badge both">DM + HT</span>' : d === "DM" ? '<span class="badge dm">DM</span>' :
+      d === "HT" ? '<span class="badge ht">HT</span>' : '<span class="badge none">ไม่ระบุ</span>';
+  };
+  const conditionBadges = r => {
+    const badges=[];
+    if(isYes(r.dm))badges.push('<span class="badge dm">DM</span>');
+    if(isYes(r.ht))badges.push('<span class="badge ht">HT</span>');
+    if(isYes(r.oldCva))badges.push('<span class="badge both">Old CVA</span>');
+    if(isYes(r.hyperlipidaemia))badges.push('<span class="badge" style="color:#6b21a8;background:#f3e8ff">Hyperlipidaemia</span>');
+    if(String(r.ckdStage||"").trim())badges.push(`<span class="badge none">CKD ${esc(r.ckdStage)}</span>`);
+    return badges.length?badges.join(" "):'<span class="badge none">ไม่ระบุ</span>';
+  };
+  const matchesDisease = (r,value) => {
+    if(!value)return true;
+    if(value==="DM")return isYes(r.dm);
+    if(value==="HT")return isYes(r.ht);
+    if(value==="BOTH")return isYes(r.dm)&&isYes(r.ht);
+    if(value==="CVA")return isYes(r.oldCva);
+    if(value==="HLP")return isYes(r.hyperlipidaemia);
+    if(/^CKD[1-5]$/.test(value))return String(r.ckdStage||"")===value.slice(3);
+    if(value==="NONE")return !isYes(r.dm)&&!isYes(r.ht)&&!isYes(r.oldCva)&&!isYes(r.hyperlipidaemia)&&!String(r.ckdStage||"").trim();
+    return true;
+  };
+  const levelMeta = {
+    green:{label:"เขียว",className:"level-green"},yellow:{label:"เหลือง",className:"level-yellow"},
+    orange:{label:"ส้ม",className:"level-orange"},red:{label:"แดง",className:"level-red"},
+    none:{label:"ไม่มีข้อมูล",className:"level-none"}
+  };
+  const sugarLevel = value => {
+    const n=Number(value);if(!Number.isFinite(n)||String(value).trim()==="")return "none";
+    return n<=125?"green":n<=154?"yellow":n<=182?"orange":"red";
+  };
+  const bpLevel = value => {
+    const m=String(value||"").match(/(\d{2,3})\s*\/\s*(\d{2,3})/);if(!m)return "none";
+    const sys=Number(m[1]),dia=Number(m[2]);
+    if(sys>=180||dia>=110)return "red";
+    if(sys>=160||dia>=100)return "orange";
+    if(sys>=140||dia>=90)return "yellow";
+    return "green";
+  };
+  const levelBadge = (level,text) => `<span class="level ${levelMeta[level].className}">${esc(text||levelMeta[level].label)}</span>`;
+  const formatThaiDate = value => {
+    if (!value) return "–";
+    const d = new Date(value);
+    if (Number.isNaN(d.getTime())) return esc(value);
+    return d.toLocaleDateString("th-TH",{day:"2-digit",month:"short",year:"numeric"});
+  };
+  const todayInput = () => {
+    const d=new Date(), offset=d.getTimezoneOffset();
+    return new Date(d.getTime()-offset*60000).toISOString().slice(0,10);
+  };
+  const monthLabel = value => {
+    const match=String(value).match(/^(\d{4})-(\d{2})$/);
+    if(!match) return value;
+    return new Date(Number(match[1]),Number(match[2])-1,1)
+      .toLocaleDateString("th-TH",{month:"long",year:"numeric"});
+  };
+  const parseBirthDateBE = value => {
+    const text=String(value||"").trim();
+    let m=text.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+    if(m) return `${Number(m[3])-543}-${String(m[2]).padStart(2,"0")}-${String(m[1]).padStart(2,"0")}`;
+    if(/^\d{4}-\d{2}-\d{2}$/.test(text)) return text;
+    return "";
+  };
+  const birthDateBE = value => {
+    const iso=parseBirthDateBE(value); if(!iso)return "";
+    const [y,m,d]=iso.split("-").map(Number); return `${String(d).padStart(2,"0")}/${String(m).padStart(2,"0")}/${y+543}`;
+  };
+  const calculateAge = (birthDate, referenceDate) => {
+    const iso=parseBirthDateBE(birthDate);
+    if(!iso || !referenceDate) return "";
+    const birth=new Date(iso+"T00:00:00"), ref=new Date(referenceDate+"T00:00:00");
+    if(Number.isNaN(birth.getTime())||Number.isNaN(ref.getTime())||birth>ref) return "";
+    let age=ref.getFullYear()-birth.getFullYear();
+    if(ref.getMonth()<birth.getMonth()||(ref.getMonth()===birth.getMonth()&&ref.getDate()<birth.getDate())) age--;
+    return age>=0?age:"";
+  };
+
+  async function api(action, payload={}) {
+    const token=auth?.token||storageGet("dmht_token");
+    const response = await fetch(GAS_URL, {
+      method:"POST", redirect:"follow",
+      headers:{"Content-Type":"text/plain;charset=utf-8"},
+      body:JSON.stringify({action, token, ...payload})
+    });
+    if (!response.ok) throw new Error("HTTP "+response.status);
+    const text = await response.text();
+    let data;
+    try { data = JSON.parse(text); } catch { throw new Error("GAS ไม่ได้ส่งข้อมูล JSON กลับมา"); }
+    if (data.ok === false) throw new Error(data.message || "ไม่สามารถทำรายการได้");
+    return data;
+  }
+
+  function setStatus(type, text) {
+    $("#statusDot").className = "dot " + (type || "");
+    $("#statusText").textContent = text;
+  }
+  function toast(message, error=false) {
+    const el=document.createElement("div"); el.className="toast"+(error?" err":""); el.textContent=message;
+    $("#toastWrap").appendChild(el); setTimeout(()=>el.remove(),3500);
+  }
+  function setBusy(on) { document.body.classList.toggle("refreshing",on); }
+
+  async function loadPublicSummary() {
+    setStatus("","กำลังโหลดภาพรวม");
+    try{
+      const result=await api("summary");
+      renderSummary(result.summary||{});
+      setStatus("ok","ข้อมูลภาพรวมล่าสุด");
+    }catch(err){
+      setStatus("bad","โหลดภาพรวมไม่สำเร็จ");
+      toast("โหลดข้อมูลภาพรวมไม่สำเร็จ: "+err.message,true);
+    }
+  }
+
+  function renderSummary(s) {
+    if(!auth) dashboardData=[];
+    $("#kpiTotal").textContent=Number(s.total||0).toLocaleString("th-TH");
+    $("#kpiDM").textContent=Number(s.dm||0).toLocaleString("th-TH");
+    $("#kpiHT").textContent=Number(s.ht||0).toLocaleString("th-TH");
+    $("#kpiBoth").textContent=Number(s.both||0).toLocaleString("th-TH");
+    const villages=Array.isArray(s.villages)?s.villages:[], vmax=Math.max(1,...villages.map(x=>Number(x.count||0)));
+    $("#villageChart").innerHTML=villages.length?villages.map(x=>`<div class="bar-row"><div>หมู่ ${esc(x.village)}</div><div class="bar-track"><div class="bar-fill" style="width:${Number(x.count||0)/vmax*100}%"></div></div><div class="bar-num">${Number(x.count||0)}</div></div>`).join(""):'<div class="empty">ยังไม่มีข้อมูลหมู่บ้าน</div>';
+    const ages=Array.isArray(s.ageGroups)?s.ageGroups:[], amax=Math.max(1,...ages.map(x=>Number(x.count||0)));
+    $("#ageChart").innerHTML=ages.map(x=>`<div class="age-col"><div class="age-num">${Number(x.count||0)}</div><div class="age-bar" style="height:${Math.max(3,Number(x.count||0)/amax*155)}px"></div><div class="age-label">${esc(x.label)}</div></div>`).join("");
+    $("#avgAge").textContent=s.avgAge!==null&&s.avgAge!==undefined?`เฉลี่ย ${s.avgAge} ปี`:"เฉลี่ย – ปี";
+    renderColorPanels(s.sugarLevels||{},s.bpLevels||{});
+  }
+
+  async function loadData(showToast=false) {
+    if(!auth){await loadPublicSummary();return}
+    setStatus("", "กำลังเชื่อมต่อข้อมูล"); setBusy(true);
+    try {
+      const [result, referralResult] = await Promise.all([api("list"), ["admin","viewer"].includes(auth.role)?api("referrallist"):Promise.resolve({data:[]})]);
+      records = Array.isArray(result.data) ? result.data : [];
+      referrals = Array.isArray(referralResult.data) ? referralResult.data : [];
+      records = records.map((r,i)=>({...r, _row:Number(r._row||r.row||i+5), _sheet:String(r._sheet||"รวม")}));
+      setStatus("ok", `เข้าสู่ระบบแล้ว · ${records.length} ราย`);
+      buildFilters(); applyFilters(); buildReferralMonths(); renderReferrals();
+      if(showToast) toast("อัปเดตข้อมูลล่าสุดแล้ว");
+    } catch(err) {
+      records=[]; filtered=[]; renderTable(); updateDashboard([]);
+      setStatus("bad","เชื่อมต่อไม่สำเร็จ");
+      toast("โหลดข้อมูลไม่สำเร็จ: "+err.message,true);
+      if(/เซสชัน|เข้าสู่ระบบ/.test(err.message)) showLoggedOut();
+    } finally { setBusy(false); }
+  }
+
+  function buildFilters() {
+    const current=$("#villageFilter").value, currentMonth=$("#monthFilter").value;
+    const villages=[...new Set(records.map(r=>String(r.village??"").trim()).filter(Boolean))]
+      .sort((a,b)=>Number(a)-Number(b)||a.localeCompare(b,"th"));
+    $("#villageFilter").innerHTML='<option value="">ทุกหมู่</option>'+villages.map(v=>`<option value="${esc(v)}">หมู่ ${esc(v)}</option>`).join("");
+    if(villages.includes(current)) $("#villageFilter").value=current;
+    const months=[...new Set(records.map(r=>String(r._sheet||"")).filter(v=>/^\d{4}-\d{2}$/.test(v)))].sort().reverse();
+    $("#monthFilter").innerHTML='<option value="">ทุกเดือน</option><option value="รวม">ข้อมูลเดิม (ชีต รวม)</option>'+
+      months.map(v=>`<option value="${v}">${monthLabel(v)}</option>`).join("");
+    if(currentMonth==="รวม"||months.includes(currentMonth)) $("#monthFilter").value=currentMonth;
+  }
+  function applyFilters() {
+    const q=$("#searchInput").value.trim().toLowerCase(), m=$("#monthFilter").value, v=$("#villageFilter").value, d=$("#diseaseFilter").value;
+    filtered=records.filter(r=>{
+      const hay=[r.hn,r.firstName,r.lastName,r.houseNo,r.village].join(" ").toLowerCase();
+      return (!q||hay.includes(q)) && (!m||String(r._sheet||"")===m) && (!v||String(r.village??"")===v) && matchesDisease(r,d);
+    });
+    page=1; renderTable(); updateDashboard(filtered);
+  }
+  function renderTable() {
+    const pages=Math.max(1,Math.ceil(filtered.length/PAGE_SIZE)); page=Math.min(page,pages);
+    const start=(page-1)*PAGE_SIZE, rows=filtered.slice(start,start+PAGE_SIZE);
+    const referralStatus=latestReferralByHN();
+    $("#tableBody").innerHTML = rows.length ? rows.map((r,i)=>`
+      <tr>
+        <td class="muted">${start+i+1}</td><td>${formatThaiDate(r.recordDate)}</td><td><strong>${fmt(r.hn)}</strong></td>
+        <td class="name">${fmt(r.firstName)} ${fmt(r.lastName)}</td><td>${r.birthDate?esc(birthDateBE(r.birthDate)):"–"}</td><td>${fmt(r.age)}</td><td>${fmt(r.phone)}</td>
+        <td>${r.houseNo?`เลขที่ ${esc(r.houseNo)}`:"–"} ${r.village?`หมู่ ${esc(r.village)}`:""}</td>
+        <td>${fmt(r.weight)} / ${fmt(r.height)}</td><td>${r.bp1?levelBadge(bpLevel(r.bp1),r.bp1):"–"}${r.bp2?` ${levelBadge(bpLevel(r.bp2),r.bp2)}`:""}</td>
+        <td>${r.bloodSugar!==""&&r.bloodSugar!=null?levelBadge(sugarLevel(r.bloodSugar),r.bloodSugar):"–"}</td><td>${formatThaiDate(r.appointmentDate)}</td><td>${fmt(r.medicationAt)}</td>
+        <td>${conditionBadges(r)}</td><td>${referralStatus.has(String(r.hn))?`<span class="badge ${referralStatus.get(String(r.hn)).type==="ส่งต่อ"?"ht":"dm"}">${esc(referralStatus.get(String(r.hn)).type)}</span>`:'<span class="badge none">รับยาตามปกติ</span>'}</td>
+        <td>${parseAttachments(r.attachments).length?`<button class="btn btn-soft" onclick="showVisitFiles('${esc(r._sheet)}',${Number(r._row)})">📎 ${parseAttachments(r.attachments).length} ไฟล์</button>`:'<span class="muted">ไม่มีไฟล์</span>'}</td>
+        <td><div class="actions">${auth?.role==="admin"?`<button class="icon-btn" title="ส่งต่อ–รับกลับ" onclick="openReferral('${esc(r.hn)}')">⇄</button>`:""}${auth?.role!=="viewer"?`<button class="icon-btn" title="แก้ไข" onclick="openEdit('${esc(r._sheet)}',${Number(r._row)})">✎</button>`:""}
+        ${auth?.role==="admin"?`<button class="icon-btn" title="ลบ" onclick="openDelete('${esc(r._sheet)}',${Number(r._row)})">⌫</button>`:""}</div></td>
+      </tr>`).join("") : '<tr><td colspan="17"><div class="empty"><div class="big">⌕</div>ไม่พบข้อมูลที่ตรงกับเงื่อนไข</div></td></tr>';
+    $("#resultText").textContent=`พบ ${filtered.length.toLocaleString("th-TH")} รายการ${filtered.length?` · แสดง ${start+1}–${Math.min(start+PAGE_SIZE,filtered.length)}`:""}`;
+    $("#pageText").textContent=`หน้า ${page} / ${pages}`;
+    $("#prevBtn").disabled=page<=1; $("#nextBtn").disabled=page>=pages;
+  }
+  function updateDashboard(data=records) {
+    dashboardData=data;
+    $("#kpiTotal").textContent=data.length.toLocaleString("th-TH");
+    $("#kpiDM").textContent=data.filter(r=>isYes(r.dm)).length.toLocaleString("th-TH");
+    $("#kpiHT").textContent=data.filter(r=>isYes(r.ht)).length.toLocaleString("th-TH");
+    $("#kpiBoth").textContent=data.filter(r=>isYes(r.dm)&&isYes(r.ht)).length.toLocaleString("th-TH");
+    const groups={}; data.forEach(r=>{const v=String(r.village??"").trim();if(v)groups[v]=(groups[v]||0)+1});
+    const villages=Object.entries(groups).sort((a,b)=>Number(a[0])-Number(b[0])||a[0].localeCompare(b[0],"th"));
+    const vmax=Math.max(1,...villages.map(x=>x[1]));
+    $("#villageChart").innerHTML=villages.length?villages.map(([v,n])=>`<div class="bar-row"><div>หมู่ ${esc(v)}</div><div class="bar-track"><div class="bar-fill" style="width:${n/vmax*100}%"></div></div><div class="bar-num">${n}</div></div>`).join(""):'<div class="empty">ยังไม่มีข้อมูลหมู่บ้าน</div>';
+    const ranges=[["<40",0,39],["40–49",40,49],["50–59",50,59],["60–69",60,69],["70–79",70,79],["80+",80,999]];
+    const ages=data.map(r=>Number(r.age)).filter(n=>Number.isFinite(n)&&n>0), counts=ranges.map(x=>ages.filter(a=>a>=x[1]&&a<=x[2]).length);
+    const amax=Math.max(1,...counts);
+    $("#ageChart").innerHTML=ranges.map((x,i)=>`<div class="age-col"><div class="age-num">${counts[i]}</div><div class="age-bar" style="height:${Math.max(3,counts[i]/amax*155)}px"></div><div class="age-label">${x[0]}</div></div>`).join("");
+    $("#avgAge").textContent=ages.length?`เฉลี่ย ${Math.round(ages.reduce((a,b)=>a+b,0)/ages.length)} ปี`:"เฉลี่ย – ปี";
+    const sugarCounts={green:0,yellow:0,orange:0,red:0},bpCounts={green:0,yellow:0,orange:0,red:0};
+    data.forEach(r=>{const s=sugarLevel(r.bloodSugar),b=bpLevel(r.bp2||r.bp1);if(sugarCounts[s]!==undefined)sugarCounts[s]++;if(bpCounts[b]!==undefined)bpCounts[b]++});
+    renderColorPanels(sugarCounts,bpCounts);
+  }
+
+  function renderColorPanels(sugarCounts,bpCounts) {
+    const levels=["green","yellow","orange","red"];
+    const render=(counts,type)=>levels.map(level=>`<div class="color-stat ${levelMeta[level].className}" role="button" tabindex="0" onclick="openColorPatients('${type}','${level}')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openColorPatients('${type}','${level}')}"><div class="color-name">${levelMeta[level].label}</div><div class="color-value">${Number(counts[level]||0).toLocaleString("th-TH")}</div></div>`).join("");
+    $("#sugarColorSummary").innerHTML=render(sugarCounts,"sugar");
+    $("#bpColorSummary").innerHTML=render(bpCounts,"bp");
+  }
+
+  window.openColorPatients = (type,level) => {
+    if(!auth){
+      toast("กรุณาเข้าสู่ระบบก่อนดูรายชื่อผู้ป่วย",true);
+      $("#loginOverlay").classList.add("show");
+      return;
+    }
+    const isSugar=type==="sugar";
+    const matches=dashboardData.filter(r=>isSugar?sugarLevel(r.bloodSugar)===level:bpLevel(r.bp2||r.bp1)===level);
+    $("#colorPatientsTitle").textContent=`${isSugar?"ค่าน้ำตาล":"ความดันโลหิต"} ระดับสี${levelMeta[level].label}`;
+    $("#colorPatientsSub").textContent=`พบ ${matches.length.toLocaleString("th-TH")} ราย · ตามตัวกรองปัจจุบัน`;
+    $("#colorValueHeader").textContent=isSugar?"ค่าน้ำตาล (mg/dL)":"ค่าความดัน";
+    $("#colorPatientsBody").innerHTML=matches.length?matches.map((r,i)=>{
+      const value=isSugar?r.bloodSugar:(r.bp2||r.bp1);
+      return `<tr><td>${i+1}</td><td>${formatThaiDate(r.recordDate)}</td><td><strong>${fmt(r.hn)}</strong></td><td class="name">${fmt(r.firstName)} ${fmt(r.lastName)}</td><td>${fmt(r.village)}</td><td>${levelBadge(level,value)}</td><td>${levelMeta[level].label}</td></tr>`;
+    }).join(""):'<tr><td colspan="7"><div class="empty">ไม่พบผู้ป่วยในระดับสีนี้</div></td></tr>';
+    $("#colorPatientsOverlay").classList.add("show");
+  };
+
+  function downloadExcel() {
+    if(!filtered.length){toast("ไม่มีข้อมูลสำหรับดาวน์โหลด",true);return}
+    const columns=[
+      ["ลำดับ",(_,i)=>i+1],["วันที่ลงข้อมูล",r=>r.recordDate],["HN",r=>r.hn],
+      ["ชื่อ",r=>r.firstName],["สกุล",r=>r.lastName],["วันเดือนปีเกิด (พ.ศ.)",r=>birthDateBE(r.birthDate)],
+      ["อายุ",r=>r.age],["เบอร์โทรศัพท์",r=>r.phone],["บ้านเลขที่",r=>r.houseNo],
+      ["หมู่",r=>r.village],["น้ำหนัก",r=>r.weight],["ส่วนสูง",r=>r.height],
+      ["รอบเอว",r=>r.waist],["ความดันครั้งที่ 1",r=>r.bp1],["ความดันครั้งที่ 2",r=>r.bp2],
+      ["ชีพจร",r=>r.pulse],["น้ำตาล",r=>r.bloodSugar],["นัดรับยาวันที่",r=>r.appointmentDate],
+      ["รับยาที่",r=>r.medicationAt],["DM",r=>r.dm],["HT",r=>r.ht],["Old CVA",r=>r.oldCva],
+      ["Hyperlipidaemia",r=>r.hyperlipidaemia],["CKD ระยะ",r=>r.ckdStage],["ชีตเดือน",r=>r._sheet]
+    ];
+    const xe=v=>String(v??"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
+    const cell=(v,head=false)=>`<Cell${head?' ss:StyleID="Header"':""}><Data ss:Type="String">${xe(v)}</Data></Cell>`;
+    const rows=[`<Row>${columns.map(c=>cell(c[0],true)).join("")}</Row>`]
+      .concat(filtered.map((r,i)=>`<Row>${columns.map(c=>cell(c[1](r,i))).join("")}</Row>`)).join("");
+    const xml=`<?xml version="1.0" encoding="UTF-8"?>
+<?mso-application progid="Excel.Sheet"?>
+<Workbook xmlns="urn:schemas-microsoft-com:office:spreadsheet"
+ xmlns:o="urn:schemas-microsoft-com:office:office"
+ xmlns:x="urn:schemas-microsoft-com:office:excel"
+ xmlns:ss="urn:schemas-microsoft-com:office:spreadsheet">
+ <Styles><Style ss:ID="Default"><Alignment ss:Vertical="Center"/><Font ss:FontName="Tahoma" ss:Size="10"/></Style>
+ <Style ss:ID="Header"><Font ss:FontName="Tahoma" ss:Size="10" ss:Bold="1" ss:Color="#FFFFFF"/>
+ <Interior ss:Color="#0F766E" ss:Pattern="Solid"/><Alignment ss:Horizontal="Center" ss:Vertical="Center"/></Style></Styles>
+ <Worksheet ss:Name="ข้อมูลผู้ป่วย"><Table>${rows}</Table>
+ <WorksheetOptions xmlns="urn:schemas-microsoft-com:office:excel"><FreezePanes/><FrozenNoSplit/><SplitHorizontal>1</SplitHorizontal><TopRowBottomPane>1</TopRowBottomPane></WorksheetOptions>
+ </Worksheet></Workbook>`;
+    const blob=new Blob(["\ufeff",xml],{type:"application/vnd.ms-excel;charset=utf-8"});
+    const link=document.createElement("a"), month=$("#monthFilter").value||"ทั้งหมด";
+    link.href=URL.createObjectURL(blob); link.download=`ทะเบียน-DM-HT-${month}-${todayInput()}.xls`;
+    document.body.appendChild(link); link.click(); link.remove(); setTimeout(()=>URL.revokeObjectURL(link.href),1000);
+    toast(`ดาวน์โหลด ${filtered.length} รายการแล้ว`);
+  }
+
+  function downloadVillageSummaryExcel() {
+    if(!filtered.length){toast("ไม่มีข้อมูลสำหรับสรุป",true);return}
+    const levels=["green","yellow","orange","red","none"], grouped={};
+    filtered.forEach(r=>{
+      const month=/^\d{4}-\d{2}$/.test(r._sheet)?r._sheet:"ข้อมูลเดิม";
+      const village=String(r.village||"ไม่ระบุ");
+      const key=month+"|"+village;
+      if(!grouped[key]) grouped[key]={month,village,total:0,sugar:{green:0,yellow:0,orange:0,red:0,none:0},bp:{green:0,yellow:0,orange:0,red:0,none:0}};
+      grouped[key].total++;
+      grouped[key].sugar[sugarLevel(r.bloodSugar)]++;
+      grouped[key].bp[bpLevel(r.bp2||r.bp1)]++;
+    });
+    const groups=Object.values(grouped).sort((a,b)=>a.month.localeCompare(b.month)||Number(a.village)-Number(b.village));
+    const summaryTable=type=>[
+      ["เดือนที่ลงข้อมูล","หมู่บ้าน","สีเขียว","สีเหลือง","สีส้ม","สีแดง","ไม่มีข้อมูล","รวม"],
+      ...groups.map(g=>[g.month,g.village,...levels.map(l=>g[type][l]),g.total])
+    ];
+    const rawTable=[
+      ["วันที่ลงข้อมูล","เดือน","หมู่","HN","ชื่อ","สกุล","วันเกิด (พ.ศ.)","อายุ","เบอร์โทร","น้ำตาล","ระดับน้ำตาล","ความดันที่ใช้สรุป","ระดับความดัน","DM","HT","Old CVA","Hyperlipidaemia","CKD ระยะ"],
+      ...filtered.map(r=>[
+        r.recordDate,r._sheet,r.village,r.hn,r.firstName,r.lastName,birthDateBE(r.birthDate),r.age,r.phone,
+        r.bloodSugar,levelMeta[sugarLevel(r.bloodSugar)].label,r.bp2||r.bp1,levelMeta[bpLevel(r.bp2||r.bp1)].label,
+        r.dm,r.ht,r.oldCva,r.hyperlipidaemia,r.ckdStage
+      ])
+    ];
+    const xe=v=>String(v??"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
+    const worksheet=(name,table)=>`<Worksheet ss:Name="${xe(name)}"><Table>${table.map((row,i)=>`<Row>${row.map(v=>`<Cell${i===0?' ss:StyleID="Header"':""}><Data ss:Type="String">${xe(v)}</Data></Cell>`).join("")}</Row>`).join("")}</Table><WorksheetOptions xmlns="urn:schemas-microsoft-com:office:excel"><FreezePanes/><FrozenNoSplit/><SplitHorizontal>1</SplitHorizontal><TopRowBottomPane>1</TopRowBottomPane></WorksheetOptions></Worksheet>`;
+    const xml=`<?xml version="1.0" encoding="UTF-8"?><?mso-application progid="Excel.Sheet"?>
+<Workbook xmlns="urn:schemas-microsoft-com:office:spreadsheet" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns:ss="urn:schemas-microsoft-com:office:spreadsheet">
+<Styles><Style ss:ID="Default"><Font ss:FontName="Tahoma" ss:Size="10"/></Style><Style ss:ID="Header"><Font ss:FontName="Tahoma" ss:Size="10" ss:Bold="1" ss:Color="#FFFFFF"/><Interior ss:Color="#0F766E" ss:Pattern="Solid"/><Alignment ss:Horizontal="Center"/></Style></Styles>
+${worksheet("สรุปค่าน้ำตาล",summaryTable("sugar"))}${worksheet("สรุปความดัน",summaryTable("bp"))}${worksheet("รายละเอียด",rawTable)}</Workbook>`;
+    const blob=new Blob(["\ufeff",xml],{type:"application/vnd.ms-excel;charset=utf-8"});
+    const link=document.createElement("a"), village=$("#villageFilter").value||"ทุกหมู่";
+    link.href=URL.createObjectURL(blob);link.download=`สรุป-DM-HT-${village}-${todayInput()}.xls`;
+    document.body.appendChild(link);link.click();const url=link.href;link.remove();setTimeout(()=>URL.revokeObjectURL(url),1000);
+    toast(`ดาวน์โหลดสรุป ${groups.length} กลุ่มเดือน–หมู่บ้านแล้ว`);
+  }
+
+  function uniquePatients() {
+    const map=new Map();
+    records.forEach(r=>{const hn=String(r.hn||"").trim();if(hn&&!map.has(hn))map.set(hn,r)});
+    return [...map.values()].sort((a,b)=>String(a.firstName||"").localeCompare(String(b.firstName||""),"th"));
+  }
+  function referralMonthOf(r){return String(r.referralDate||"").slice(0,7)}
+  function buildReferralMonths(){
+    const current=$("#referralMonth").value;
+    const months=[...new Set(referrals.map(referralMonthOf).filter(x=>/^\d{4}-\d{2}$/.test(x)))].sort().reverse();
+    $("#referralMonth").innerHTML='<option value="">ทุกเดือน</option>'+months.map(x=>`<option value="${x}">${monthLabel(x)}</option>`).join("");
+    $("#referralMonth").value=months.includes(current)?current:(months[0]||"");
+  }
+  function latestReferralByHN(){
+    const latest=new Map();
+    [...referrals].sort((a,b)=>String(a.referralDate).localeCompare(String(b.referralDate))||Number(a._row)-Number(b._row)).forEach(r=>latest.set(String(r.hn),r));
+    return latest;
+  }
+  function renderReferrals(){
+    const month=$("#referralMonth").value;
+    const rows=referrals.filter(r=>!month||referralMonthOf(r)===month);
+    $("#refSent").textContent=rows.filter(r=>r.type==="ส่งต่อ").length.toLocaleString("th-TH");
+    $("#refReturned").textContent=rows.filter(r=>r.type==="รับกลับ").length.toLocaleString("th-TH");
+    $("#refCurrent").textContent=[...latestReferralByHN().values()].filter(r=>r.type==="ส่งต่อ").length.toLocaleString("th-TH");
+    $("#referralBody").innerHTML=rows.length?rows.map(r=>`<tr><td>${formatThaiDate(r.referralDate)}</td><td><span class="badge ${r.type==="ส่งต่อ"?"ht":"dm"}">${esc(r.type)}</span></td><td><strong>${fmt(r.hn)}</strong></td><td class="name">${fmt(r.firstName)} ${fmt(r.lastName)}</td><td>${fmt(r.village)}</td><td>${fmt(r.reason)}</td><td>${formatThaiDate(r.followupDate)}</td><td>${fmt(r.note)}</td><td>${auth?.role==="admin"?`<button class="icon-btn" title="ลบ" onclick="deleteReferral('${esc(r.id)}')">⌫</button>`:'<span class="badge none">ดูเท่านั้น</span>'}</td></tr>`).join(""):'<tr><td colspan="9"><div class="empty">ไม่พบรายการในเดือนนี้</div></td></tr>';
+  }
+  window.openReferralPatients = kind => {
+    if(!["admin","viewer"].includes(auth?.role)){toast("รายการนี้ดูได้เฉพาะ Admin และรพ.แม่ข่าย",true);return}
+    const month=$("#referralMonth").value;
+    let rows,title;
+    if(kind==="current"){
+      rows=[...latestReferralByHN().values()].filter(r=>r.type==="ส่งต่อ");title="ผู้ป่วยที่กำลังส่งต่อปัจจุบัน";
+    }else{
+      const type=kind==="sent"?"ส่งต่อ":"รับกลับ";rows=referrals.filter(r=>(!month||referralMonthOf(r)===month)&&r.type===type);title="รายชื่อผู้ป่วย"+type;
+    }
+    $("#referralPatientsTitle").textContent=title;
+    $("#referralPatientsSub").textContent=`${kind==="current"?"สถานะล่าสุด":month?monthLabel(month):"ทุกเดือน"} · ${rows.length.toLocaleString("th-TH")} ราย`;
+    $("#referralPatientsBody").innerHTML=rows.length?rows.map((r,i)=>`<tr><td>${i+1}</td><td>${formatThaiDate(r.referralDate)}</td><td><strong>${fmt(r.hn)}</strong></td><td class="name">${fmt(r.firstName)} ${fmt(r.lastName)}</td><td>${fmt(r.village)}</td><td><span class="badge ${r.type==="ส่งต่อ"?"ht":"dm"}">${esc(r.type)}</span></td><td>${fmt(r.reason)}</td></tr>`).join(""):'<tr><td colspan="7"><div class="empty">ไม่พบรายชื่อผู้ป่วย</div></td></tr>';
+    $("#referralPatientsOverlay").classList.add("show");
+  };
+  window.openReferral = hn => {
+    if(auth?.role!=="admin"){toast("ทำรายการส่งต่อ-รับกลับได้เฉพาะ Admin",true);return}
+    const f=$("#referralForm"), patients=uniquePatients(); f.reset(); f.elements.referralDate.value=todayInput();
+    f.elements.patientKey.innerHTML='<option value="">– เลือกผู้ป่วย –</option>'+patients.map(p=>`<option value="${esc(p.hn)}">HN ${esc(p.hn)} · ${esc(p.firstName)} ${esc(p.lastName)} · หมู่ ${esc(p.village)}</option>`).join("");
+    if(hn)f.elements.patientKey.value=String(hn);
+    $("#referralOverlay").classList.add("show");
+  };
+  window.deleteReferral = async id => {
+    if(!confirm("ยืนยันลบรายการส่งต่อ–รับกลับนี้?"))return;
+    try{await api("referraldelete",{id});toast("ลบรายการแล้ว");await loadData()}catch(err){toast("ลบไม่สำเร็จ: "+err.message,true)}
+  };
+  function downloadReferralExcel(){
+    const month=$("#referralMonth").value, rows=referrals.filter(r=>!month||referralMonthOf(r)===month);
+    if(!rows.length){toast("ไม่มีข้อมูลส่งต่อ–รับกลับ",true);return}
+    const headers=["วันที่","ประเภท","HN","ชื่อ","สกุล","หมู่","สถานพยาบาล","เหตุผล/การวินิจฉัย","วันนัด/รับกลับ","หมายเหตุ","ผู้บันทึก"], xe=v=>String(v??"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
+    const values=rows.map(r=>[r.referralDate,r.type,r.hn,r.firstName,r.lastName,r.village,r.hospital,r.reason,r.followupDate,r.note,r.createdBy]);
+    const table=[headers,...values].map((row,i)=>`<Row>${row.map(v=>`<Cell${i===0?' ss:StyleID="Header"':""}><Data ss:Type="String">${xe(v)}</Data></Cell>`).join("")}</Row>`).join("");
+    const xml=`<?xml version="1.0" encoding="UTF-8"?><?mso-application progid="Excel.Sheet"?><Workbook xmlns="urn:schemas-microsoft-com:office:spreadsheet" xmlns:ss="urn:schemas-microsoft-com:office:spreadsheet"><Styles><Style ss:ID="Header"><Font ss:Bold="1" ss:Color="#FFFFFF"/><Interior ss:Color="#0F766E" ss:Pattern="Solid"/></Style></Styles><Worksheet ss:Name="ส่งต่อ-รับกลับ"><Table>${table}</Table></Worksheet></Workbook>`;
+    const blob=new Blob(["\ufeff",xml],{type:"application/vnd.ms-excel;charset=utf-8"}),link=document.createElement("a");link.href=URL.createObjectURL(blob);link.download=`สรุป-ส่งต่อ-รับกลับ-${month||"ทุกเดือน"}.xls`;link.click();setTimeout(()=>URL.revokeObjectURL(link.href),1000);
+  }
+
+  async function downloadVisitFile(sheet,row,fileId){
+    try{
+      toast("กำลังเปิดไฟล์แนบ");
+      const result=await api("attachmentget",{sourceSheet:sheet,row,fileId}),f=result.file||{},binary=atob(String(f.base64||"")),bytes=Uint8Array.from(binary,c=>c.charCodeAt(0)),url=URL.createObjectURL(new Blob([bytes],{type:f.mimeType||"application/octet-stream"}));
+      const link=document.createElement("a");link.href=url;link.download=f.name||"ไฟล์แนบ";document.body.appendChild(link);link.click();link.remove();setTimeout(()=>URL.revokeObjectURL(url),3000);
+    }catch(err){toast("เปิดไฟล์ไม่สำเร็จ: "+err.message,true)}
+  }
+  window.showVisitFiles=(sheet,row)=>{
+    const record=records.find(r=>r._sheet===sheet&&Number(r._row)===Number(row));if(!record)return;
+    const files=parseAttachments(record.attachments);$("#visitFilesSub").textContent=`HN ${record.hn||"–"} · ${record.firstName||""} ${record.lastName||""} · visit ${formatThaiDate(record.recordDate)}`;
+    $("#visitFilesList").innerHTML=files.map(f=>`<div class="attachment-item"><div>📎 <strong>${esc(f.name)}</strong><div class="panel-sub">${f.mimeType==="application/pdf"?"PDF":"รูปภาพ"} · ${f.size?Math.ceil(Number(f.size)/1024).toLocaleString("th-TH")+" KB":""}</div></div><button class="btn btn-soft" onclick="downloadVisitFile('${esc(sheet)}',${Number(row)},'${esc(f.id)}')">⇩ เปิด/ดาวน์โหลด</button></div>`).join("");
+    $("#visitFilesOverlay").classList.add("show");
+  };
+  window.downloadVisitFile=downloadVisitFile;
+
+  function openForm(record=null) {
+    editing=record; const f=$("#patientForm"); f.reset();
+    $("#formTitle").textContent=record?"แก้ไขข้อมูลผู้ป่วย":"เพิ่มข้อมูลผู้ป่วย";
+    fields.forEach(k=>{ if(f.elements[k]) f.elements[k].value=record?.[k]??(k==="medicationAt"?"รพ.สต.":k==="recordDate"?todayInput():"") });
+    if(record?.recordDate) {
+      const d=new Date(record.recordDate); if(!Number.isNaN(d.getTime())) f.elements.recordDate.value=d.toISOString().slice(0,10);
+    }
+    if(record?.birthDate) f.elements.birthDate.value=birthDateBE(record.birthDate);
+    if(auth?.role==="village"){f.elements.village.value=auth.village;f.elements.village.readOnly=true}
+    else f.elements.village.readOnly=false;
+    if(record?.appointmentDate) {
+      const d=new Date(record.appointmentDate); if(!Number.isNaN(d.getTime())) f.elements.appointmentDate.value=d.toISOString().slice(0,10);
+    }
+    const existing=parseAttachments(record?.attachments);
+    $("#existingAttachments").innerHTML=existing.length?'<div class="panel-sub">ไฟล์ที่แนบแล้ว</div>'+existing.map(x=>`<div class="attachment-item"><span>📎 ${esc(x.name)}</span><button type="button" class="btn btn-soft" onclick="downloadVisitFile('${esc(record._sheet)}',${Number(record._row)},'${esc(x.id)}')">⇩ ดาวน์โหลด</button></div>`).join(""):"";
+    $("#formOverlay").classList.add("show"); setTimeout(()=>f.elements.hn.focus(),50);
+  }
+  function closeForm(){ $("#formOverlay").classList.remove("show"); editing=null }
+  window.openEdit = (sheet,row) => { const r=records.find(x=>x._sheet===sheet&&Number(x._row)===Number(row)); if(r)openForm(r) };
+  window.openDelete = (sheet,row) => {
+    deleting=records.find(x=>x._sheet===sheet&&Number(x._row)===Number(row)); if(!deleting)return;
+    $("#deleteName").textContent=`${deleting.firstName||""} ${deleting.lastName||""} (HN ${deleting.hn||"–"})`;
+    $("#deleteOverlay").classList.add("show");
+  };
+
+  function setAuthenticated(profile,token) {
+    auth={...profile,token};
+    storageSet("dmht_token",token);
+    $("#dataCard").classList.remove("locked");
+    $("#referralCard").classList.remove("locked");
+    $("#userChip").style.display="block";
+    $("#userChip").textContent=profile.role==="admin"?"Admin · จัดการได้ทั้งหมด":profile.role==="viewer"?"รพ.แม่ข่าย · ดูได้อย่างเดียว":`ผู้ใช้หมู่ ${profile.village}`;
+    $("#loginBtn").textContent="ออกจากระบบ";
+    $("#addBtn").style.display=profile.role==="admin"?"inline-flex":"none";
+    $("#mobileAddBtn").classList.toggle("active",profile.role==="admin");
+    $("#formatSheetBtn").style.display=profile.role==="admin"?"inline-flex":"none";
+    $("#changePasswordBtn").style.display=profile.role==="admin"?"inline-flex":"none";
+    $("#referralBtn").style.display=["admin","viewer"].includes(profile.role)?"inline-flex":"none";
+    $("#referralCard").style.display=["admin","viewer"].includes(profile.role)?"block":"none";
+    $("#newReferralBtn").style.display=profile.role==="admin"?"inline-flex":"none";
+    $("#referralExportBtn").style.display=profile.role==="admin"?"inline-flex":"none";
+    $("#exportBtn").style.display=profile.role==="viewer"?"none":"inline-flex";
+    $("#summaryExportBtn").style.display=profile.role==="viewer"?"none":"inline-flex";
+    loadData();
+  }
+  function showLoggedOut() {
+    auth=null;records=[];filtered=[];dashboardData=[];referrals=[];storageRemove("dmht_token");
+    $("#dataCard").classList.add("locked");$("#userChip").style.display="none";$("#loginBtn").textContent="เข้าสู่ระบบ";
+    $("#referralCard").classList.add("locked");
+    $("#formatSheetBtn").style.display="none";
+    $("#changePasswordBtn").style.display="none";
+    $("#addBtn").style.display="none";
+    $("#referralBtn").style.display="none";$("#referralCard").style.display="none";
+    $("#newReferralBtn").style.display="none";$("#referralExportBtn").style.display="none";
+    $("#exportBtn").style.display="inline-flex";$("#summaryExportBtn").style.display="inline-flex";
+    $("#mobileAddBtn").classList.remove("active");
+    $("#tableBody").innerHTML='<tr><td><div class="login-note"><div class="lock">🔒</div><strong>เข้าสู่ระบบเพื่อดูรายชื่อผู้ป่วย</strong><div class="panel-sub">หน้าหลักแสดงเฉพาะข้อมูลภาพรวมที่ไม่ระบุตัวบุคคล</div></div></td></tr>';
+    loadPublicSummary();
+  }
+  async function restoreSession() {
+    const token=storageGet("dmht_token");
+    if(!token){showLoggedOut();return}
+    try{
+      auth={token};const result=await api("session");
+      setAuthenticated(result.user,token);
+    }catch{showLoggedOut()}
+  }
+  $("#loginForm").addEventListener("submit",async e=>{
+    e.preventDefault();const form=e.currentTarget,btn=$("#loginSubmit"),fd=new FormData(form);
+    btn.disabled=true;btn.innerHTML='<i class="loader"></i> กำลังเข้าสู่ระบบ';
+    try{
+      const result=await api("login",{username:String(fd.get("username")||"").trim(),password:String(fd.get("password")||"").trim()});
+      $("#loginOverlay").classList.remove("show");form.reset();setAuthenticated(result.user,result.token);toast("เข้าสู่ระบบเรียบร้อย");
+    }catch(err){toast("เข้าสู่ระบบไม่สำเร็จ: "+err.message,true)}
+    finally{btn.disabled=false;btn.textContent="เข้าสู่ระบบ"}
+  });
+  $("#loginBtn").addEventListener("click",()=>{
+    if(auth){showLoggedOut();toast("ออกจากระบบแล้ว")}
+    else{$("#loginOverlay").classList.add("show");setTimeout(()=>$("#loginForm").elements.username.focus(),50)}
+  });
+  document.querySelectorAll("[data-login-close]").forEach(b=>b.addEventListener("click",()=>$("#loginOverlay").classList.remove("show")));
+  document.querySelectorAll("[data-password-close]").forEach(b=>b.addEventListener("click",()=>$("#passwordOverlay").classList.remove("show")));
+  $("#changePasswordBtn").addEventListener("click",()=>{if(auth?.role!=="admin")return;$("#passwordForm").reset();$("#passwordOverlay").classList.add("show");setTimeout(()=>$("#passwordForm").elements.currentPassword.focus(),50)});
+  $("#passwordForm").addEventListener("submit",async e=>{
+    e.preventDefault();const f=e.currentTarget,currentPassword=f.elements.currentPassword.value,newPassword=f.elements.newPassword.value,confirmPassword=f.elements.confirmPassword.value,btn=$("#savePasswordBtn");
+    if(newPassword!==confirmPassword){toast("การยืนยันรหัสผ่านใหม่ไม่ตรงกัน",true);return}
+    btn.disabled=true;btn.innerHTML='<i class="loader"></i> กำลังเปลี่ยน';
+    try{await api("changepassword",{currentPassword,newPassword});$("#passwordOverlay").classList.remove("show");showLoggedOut();toast("เปลี่ยนรหัสผ่านแล้ว กรุณาเข้าสู่ระบบใหม่")}catch(err){toast("เปลี่ยนรหัสผ่านไม่สำเร็จ: "+err.message,true)}finally{btn.disabled=false;btn.textContent="เปลี่ยนรหัสผ่าน"}
+  });
+  document.querySelectorAll("[data-color-close]").forEach(b=>b.addEventListener("click",()=>$("#colorPatientsOverlay").classList.remove("show")));
+  document.querySelectorAll("[data-referral-close]").forEach(b=>b.addEventListener("click",()=>$("#referralOverlay").classList.remove("show")));
+  document.querySelectorAll("[data-referral-patients-close]").forEach(b=>b.addEventListener("click",()=>$("#referralPatientsOverlay").classList.remove("show")));
+  document.querySelectorAll("[data-visit-files-close]").forEach(b=>b.addEventListener("click",()=>$("#visitFilesOverlay").classList.remove("show")));
+
+  $("#referralForm").addEventListener("submit",async e=>{
+    e.preventDefault();const f=e.currentTarget,fd=new FormData(f),patient=uniquePatients().find(p=>String(p.hn)===String(fd.get("patientKey"))),btn=$("#saveReferralBtn");
+    if(!patient){toast("กรุณาเลือกผู้ป่วย",true);return}
+    const data={referralDate:String(fd.get("referralDate")||""),type:String(fd.get("type")||""),hn:patient.hn,firstName:patient.firstName,lastName:patient.lastName,village:patient.village,reason:String(fd.get("reason")||"").trim(),followupDate:String(fd.get("followupDate")||""),note:String(fd.get("note")||"").trim()};
+    btn.disabled=true;btn.innerHTML='<i class="loader"></i> กำลังบันทึก';
+    try{await api("referralsave",{data});$("#referralOverlay").classList.remove("show");toast("บันทึกการ"+data.type+"แล้ว");await loadData()}
+    catch(err){toast("บันทึกไม่สำเร็จ: "+err.message,true)}finally{btn.disabled=false;btn.textContent="บันทึกรายการ"}
+  });
+
+  $("#patientForm").addEventListener("submit",async e=>{
+    e.preventDefault(); const btn=$("#saveBtn"), fd=new FormData(e.currentTarget), data={};
+    fields.forEach(k=>data[k]=String(fd.get(k)??"").trim());
+    const wasEditing=Boolean(editing), editRow=editing?editing._row:null, sourceSheet=editing?editing._sheet:null, selectedFiles=[...(e.currentTarget.elements.visitFiles.files||[])], existingCount=parseAttachments(editing?.attachments).length;
+    if(selectedFiles.length+existingCount>3){toast("แนบไฟล์ได้ไม่เกิน 3 ไฟล์ต่อ visit",true);return}
+    if(selectedFiles.some(f=>f.size>5*1024*1024)){toast("ไฟล์แนบต้องมีขนาดไม่เกิน 5 MB ต่อไฟล์",true);return}
+    btn.disabled=true; btn.innerHTML='<i class="loader"></i> กำลังบันทึก';
+    try{
+      data.newAttachments=await Promise.all(selectedFiles.map(fileToPayload));
+      const result=await api(wasEditing?"update":"create", wasEditing?{row:editRow,sourceSheet,data}:{data});
+      closeForm(); toast(wasEditing?"แก้ไขข้อมูลเรียบร้อย":"เพิ่มข้อมูลเรียบร้อย");
+      if(result.line?.sent) toast("ส่งแจ้งเตือนผู้ป่วยสีแดงเข้า LINE OA แล้ว");
+      else if(result.line?.error) toast("บันทึกแล้ว แต่ส่ง LINE ไม่สำเร็จ: "+result.line.error,true);
+      await loadData();
+    }catch(err){toast("บันทึกไม่สำเร็จ: "+err.message,true)}
+    finally{btn.disabled=false;btn.textContent="บันทึกข้อมูล"}
+  });
+  $("#confirmDelete").addEventListener("click",async()=>{
+    if(!deleting)return; const btn=$("#confirmDelete"); btn.disabled=true; btn.innerHTML='<i class="loader"></i> กำลังลบ';
+    try{await api("delete",{row:deleting._row,sourceSheet:deleting._sheet});$("#deleteOverlay").classList.remove("show");toast("ลบข้อมูลเรียบร้อย");deleting=null;await loadData()}
+    catch(err){toast("ลบไม่สำเร็จ: "+err.message,true)}
+    finally{btn.disabled=false;btn.textContent="ลบข้อมูล"}
+  });
+  document.querySelectorAll("[data-close]").forEach(b=>b.addEventListener("click",closeForm));
+  document.querySelectorAll("[data-delete-close]").forEach(b=>b.addEventListener("click",()=>{$("#deleteOverlay").classList.remove("show");deleting=null}));
+  $("#addBtn").addEventListener("click",()=>openForm()); $("#refreshBtn").addEventListener("click",()=>loadData(true));
+  $("#referralBtn").addEventListener("click",()=>{$("#referralCard").scrollIntoView({behavior:"smooth"})});
+  $("#newReferralBtn").addEventListener("click",()=>openReferral(""));
+  $("#referralMonth").addEventListener("change",renderReferrals);
+  $("#referralExportBtn").addEventListener("click",downloadReferralExcel);
+  $("#formatSheetBtn").addEventListener("click",async()=>{
+    const btn=$("#formatSheetBtn");btn.disabled=true;btn.innerHTML='<i class="loader"></i> กำลังจัดรูปแบบ';
+    try{await api("setup");toast("จัดรูปแบบ Google Sheets เรียบร้อย")}
+    catch(err){toast("จัดรูปแบบไม่สำเร็จ: "+err.message,true)}
+    finally{btn.disabled=false;btn.textContent="▦ จัดรูปแบบ GS"}
+  });
+  $("#mobileAddBtn").addEventListener("click",()=>openForm());
+  $("#exportBtn").addEventListener("click",downloadExcel);
+  $("#summaryExportBtn").addEventListener("click",downloadVillageSummaryExcel);
+  $("#searchInput").addEventListener("input",applyFilters); $("#monthFilter").addEventListener("change",applyFilters); $("#villageFilter").addEventListener("change",applyFilters); $("#diseaseFilter").addEventListener("change",applyFilters);
+  $("#prevBtn").addEventListener("click",()=>{if(page>1){page--;renderTable()}}); $("#nextBtn").addEventListener("click",()=>{if(page*PAGE_SIZE<filtered.length){page++;renderTable()}});
+  ["birthDate","recordDate"].forEach(name=>$("#patientForm").elements[name].addEventListener("input",()=>{
+    const f=$("#patientForm"); f.elements.age.value=calculateAge(f.elements.birthDate.value,f.elements.recordDate.value);
+  }));
+  document.addEventListener("keydown",e=>{if(e.key==="Escape"){closeForm();$("#deleteOverlay").classList.remove("show");$("#colorPatientsOverlay").classList.remove("show");$("#loginOverlay").classList.remove("show");$("#passwordOverlay").classList.remove("show");$("#referralOverlay").classList.remove("show");$("#referralPatientsOverlay").classList.remove("show");$("#visitFilesOverlay").classList.remove("show")}});
+  restoreSession();
+</script>
+</body>
+</html>
