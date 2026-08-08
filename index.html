@@ -179,7 +179,7 @@
       <article class="card panel"><div class="panel-head"><div><div class="panel-title">สัดส่วนสีค่าน้ำตาล</div><div class="panel-sub">เทียบสัดส่วน visit แต่ละระดับสี</div></div></div><div class="donut-layout"><div class="donut" id="sugarDonut"><div class="donut-center"><strong id="sugarDonutTotal">0</strong><span>visits ที่มีผลน้ำตาล</span></div></div><div class="donut-legend" id="sugarDonutLegend"></div></div></article>
       <article class="card panel"><div class="panel-head"><div><div class="panel-title">สัดส่วนสีความดันโลหิต</div><div class="panel-sub">เทียบสัดส่วน visit แต่ละระดับสี</div></div></div><div class="donut-layout"><div class="donut" id="bpDonut"><div class="donut-center"><strong id="bpDonutTotal">0</strong><span>visits ที่มีผลความดัน</span></div></div><div class="donut-legend" id="bpDonutLegend"></div></div></article>
     </section>
-    <section class="card panel" style="margin-top:14px"><div class="panel-head"><div><div class="panel-title" id="monthlyTrendTitle">แนวโน้มสัดส่วนค่าน้ำตาลรายเดือน</div><div class="panel-sub">แต่ละเดือนแสดง 4 แท่งแยกตามสี เพื่อเปรียบเทียบสัดส่วนได้ชัดเจน · ตัวเลขด้านบน = สีส้ม+สีแดง</div></div><div style="display:flex;gap:8px;flex-wrap:wrap"><select id="trendMetric" aria-label="เลือกประเภทผลตรวจ"><option value="sugar">ค่าน้ำตาล</option><option value="bp">ความดันโลหิต</option></select><select id="sugarChartMonth" aria-label="เลือกเดือนกราฟ"><option value="">เทียบทุกเดือน</option></select></div></div><div class="stack-counts" id="monthlyTrendLegend"><span>🟢 เขียว ≤125</span><span>🟡 เหลือง 126–154</span><span>🟠 ส้ม 155–182</span><span>🔴 แดง ≥183</span></div><div class="trend-insight" id="monthlySugarInsight">กำลังวิเคราะห์แนวโน้ม…</div><div class="proportion-scroll"><div class="proportion-chart" id="monthlySugarBars"><div class="empty">กำลังโหลดข้อมูล…</div></div></div></section>
+    <section class="card panel" style="margin-top:14px"><div class="panel-head"><div><div class="panel-title" id="monthlyTrendTitle">แนวโน้มสัดส่วนค่าน้ำตาลรายเดือน</div><div class="panel-sub">แต่ละเดือนแสดง 4 แท่งแยกตามสี เพื่อเปรียบเทียบสัดส่วนได้ชัดเจน · ตัวเลขด้านบน = สีส้ม+สีแดง</div></div><div style="display:flex;gap:8px;flex-wrap:wrap"><select id="trendMetric" aria-label="เลือกประเภทผลตรวจ"><option value="sugar">ค่าน้ำตาล</option><option value="bp">ความดันโลหิต</option></select><select id="sugarChartMonth" aria-label="เลือกเดือนกราฟ"><option value="">เทียบทุกเดือน</option></select></div></div><div class="stack-counts" id="monthlyTrendLegend"><span>🟢 เขียว 60–125</span><span>🟡 เหลือง 126–154</span><span>🟠 ส้ม 155–182</span><span>🔴 แดง &lt;60 หรือ ≥183</span><span>🔴🔴 วิกฤต &lt;60 หรือ &gt;250</span></div><div class="trend-insight" id="monthlySugarInsight">กำลังวิเคราะห์แนวโน้ม…</div><div class="proportion-scroll"><div class="proportion-chart" id="monthlySugarBars"><div class="empty">กำลังโหลดข้อมูล…</div></div></div></section>
     </div>
 
     <section class="card table-card locked section-anchor app-view" id="dataCard" data-view="dataCard" hidden>
@@ -393,7 +393,7 @@
   <div class="modal" style="width:min(650px,100%)"><div class="modal-head"><div><div class="modal-title">ไฟล์ประวัติการรักษา</div><div class="panel-sub" id="visitFilesSub"></div></div><button type="button" class="close" data-visit-files-close>×</button></div><div class="form-body"><div class="attachment-list" id="visitFilesList"></div></div><div class="modal-foot"><button type="button" class="btn btn-primary" data-visit-files-close>ปิด</button></div></div>
 </div>
 <div class="toast-wrap" id="toastWrap"></div>
-<div class="red-screen" id="redScreen" role="alertdialog" aria-modal="true"><div class="red-alert-box"><div style="font-size:50px">🚨</div><h2>พบผู้ป่วยระดับสีแดง</h2><div id="redAlertDetail"></div><p><strong>กรุณาวัดซ้ำ ประเมินอาการ และดำเนินการตามแนวทางของหน่วยบริการทันที</strong></p><button class="btn btn-danger" id="closeRedAlert">รับทราบและดำเนินการ</button></div></div>
+<div class="red-screen" id="redScreen" role="alertdialog" aria-modal="true"><div class="red-alert-box"><div style="font-size:50px">🚨</div><h2 id="redAlertTitle">พบผู้ป่วยระดับสีแดง</h2><div id="redAlertDetail"></div><p><strong>กรุณาวัดซ้ำ ประเมินอาการ และดำเนินการตามแนวทางของหน่วยบริการทันที</strong></p><button class="btn btn-danger" id="closeRedAlert">รับทราบและดำเนินการ</button></div></div>
 <button class="mobile-add" id="mobileAddBtn" aria-label="เพิ่มข้อมูลผู้ป่วย">＋</button>
 
 <script>
@@ -438,8 +438,9 @@
     if(!role)$("#reportReadOnlyNote").innerHTML='<div class="lock">🔒</div><strong>กรุณาเข้าสู่ระบบเพื่อใช้งานรายงาน</strong>';
     else if(role==="viewer")$("#reportReadOnlyNote").innerHTML='<div class="lock">🔒</div><strong>บัญชีรพ.แม่ข่ายมีสิทธิ์ดูข้อมูลเท่านั้น</strong><div class="panel-sub">ไม่สามารถดาวน์โหลดรายงานได้</div>';
   }
-  function showRedAlert(data,redSugar,redBP){
-    $("#redAlertDetail").innerHTML=`<strong>${esc(data.firstName||"")} ${esc(data.lastName||"")}</strong><br>HN ${esc(data.hn||"–")} · หมู่ ${esc(data.village||"–")}${redSugar?`<br>🔴 น้ำตาล ${esc(data.bloodSugar)} mg/dL`:""}${redBP?`<br>🔴 ความดัน ${esc(data.bp2||data.bp1)} mmHg`:""}`;
+  function showRedAlert(data,redSugar,redBP,criticalSugar=false){
+    $("#redAlertTitle").textContent=criticalSugar?"🔴🔴 ค่าน้ำตาลเกินค่าวิกฤต":"พบผู้ป่วยระดับสีแดง";
+    $("#redAlertDetail").innerHTML=`<strong>${esc(data.firstName||"")} ${esc(data.lastName||"")}</strong><br>HN ${esc(data.hn||"–")} · หมู่ ${esc(data.village||"–")}${redSugar?`<br>${criticalSugar?"🔴🔴":"🔴"} น้ำตาล ${esc(data.bloodSugar)} mg/dL${criticalSugar?' <strong>(เกินค่าวิกฤต)</strong>':""}`:""}${redBP?`<br>🔴 ความดัน ${esc(data.bp2||data.bp1)} mmHg`:""}`;
     $("#redScreen").classList.add("show");
   }
   async function clearDayLegacy(date,button){
@@ -490,8 +491,10 @@
   };
   const sugarLevel = value => {
     const n=Number(value);if(!Number.isFinite(n)||String(value).trim()==="")return "none";
+    if(n<60)return "red";
     return n<=125?"green":n<=154?"yellow":n<=182?"orange":"red";
   };
+  const isCriticalSugar = value => {const n=Number(value);return String(value??"").trim()!==""&&Number.isFinite(n)&&(n<60||n>250)};
   const bpLevel = value => {
     const m=String(value||"").match(/(\d{2,3})\s*\/\s*(\d{2,3})/);if(!m)return "none";
     const sys=Number(m[1]),dia=Number(m[2]);
@@ -500,7 +503,7 @@
     if(sys>=140||dia>=90)return "yellow";
     return "green";
   };
-  const levelBadge = (level,text) => `<span class="level ${levelMeta[level].className}">${esc(text||levelMeta[level].label)}</span>`;
+  const levelBadge = (level,text) => {const critical=level==="red"&&isCriticalSugar(text);return `<span class="level ${levelMeta[level].className}"${critical?' title="ค่าน้ำตาลเกินค่าวิกฤต"':""}>${critical?`🔴🔴 ${esc(text)} วิกฤต`:esc(text||levelMeta[level].label)}</span>`};
   const formatThaiDate = value => {
     if (!value) return "–";
     const d = new Date(value);
@@ -709,7 +712,7 @@
     const isBP=$("#trendMetric").value==="bp",metricName=isBP?"ความดันโลหิต":"น้ำตาล";
     const allRows=[...(isBP?currentMonthlyBP:currentMonthlySugar)].filter(x=>x?.month).sort((a,b)=>a.month.localeCompare(b.month));
     $("#monthlyTrendTitle").textContent=`แนวโน้มสัดส่วนค่า${metricName}รายเดือน`;
-    $("#monthlyTrendLegend").innerHTML=isBP?'<span>🟢 เขียว ≤139/89</span><span>🟡 เหลือง 140/90–159/99</span><span>🟠 ส้ม 160/100–179/109</span><span>🔴 แดง ≥180/110</span>':'<span>🟢 เขียว ≤125</span><span>🟡 เหลือง 126–154</span><span>🟠 ส้ม 155–182</span><span>🔴 แดง ≥183</span>';
+    $("#monthlyTrendLegend").innerHTML=isBP?'<span>🟢 เขียว ≤139/89</span><span>🟡 เหลือง 140/90–159/99</span><span>🟠 ส้ม 160/100–179/109</span><span>🔴 แดง ≥180/110</span>':'<span>🟢 เขียว 60–125</span><span>🟡 เหลือง 126–154</span><span>🟠 ส้ม 155–182</span><span>🔴 แดง &lt;60 หรือ ≥183</span><span>🔴🔴 วิกฤต &lt;60 หรือ &gt;250</span>';
     const months=allRows.map(x=>x.month).sort().reverse();
     select.innerHTML='<option value="">เทียบทุกเดือน</option>'+months.map(m=>`<option value="${m}">${monthLabel(m)}</option>`).join("");
     if(months.includes(current))select.value=current;
@@ -1134,8 +1137,8 @@ ${worksheet("สรุปค่าน้ำตาล",summaryTable("sugar"))}${w
       closeForm(); toast(result.message||"บันทึกข้อมูลเรียบร้อย");
       if(result.line?.sent) toast("ส่งแจ้งเตือนผู้ป่วยสีแดงเข้า LINE OA แล้ว");
       else if(result.line?.error) toast("บันทึกแล้ว แต่ส่ง LINE ไม่สำเร็จ: "+result.line.error,true);
-      const redSugar=sugarLevel(data.bloodSugar)==="red",redBP=bpLevel(data.bp2||data.bp1)==="red";
-      if(redSugar||redBP)showRedAlert(data,redSugar,redBP);
+      const redSugar=sugarLevel(data.bloodSugar)==="red",redBP=bpLevel(data.bp2||data.bp1)==="red",criticalSugar=isCriticalSugar(data.bloodSugar);
+      if(redSugar||redBP)showRedAlert(data,redSugar,redBP,criticalSugar);
     }catch(err){toast("บันทึกไม่สำเร็จ: "+err.message,true)}
     finally{btn.disabled=false;btn.textContent="บันทึกข้อมูล"}
   });
