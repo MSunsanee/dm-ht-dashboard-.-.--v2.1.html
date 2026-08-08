@@ -398,7 +398,7 @@
 
 <script>
   const GAS_URL = "https://script.google.com/macros/s/AKfycbx9y2f2fVFf2dGYV1LDuC9xISrqghO0vDg0PZjLE5ILkN0Nxf6utz3gAKCqqkIdoMt2/exec";
-  const REQUIRED_API_VERSION = 7;
+  const REQUIRED_API_VERSION = 8;
   const PAGE_SIZE = 20;
   const fields = ["recordDate","hn","firstName","lastName","birthDate","age","phone","houseNo","village","weight","height","waist","bp1","bp2","pulse","bloodSugar","appointmentDate","medicationAt","dm","ht","oldCva","hyperlipidaemia","ckdStage"];
   let records = [], filtered = [], dashboardData = [], referrals = [], currentMonthlySugar = [], currentMonthlyBP = [], page = 1, editing = null, deleting = null, auth = null, formMode = "basic", loadPromise = null, queueMode = "all";
@@ -417,26 +417,27 @@
   function closeSidebar(){$("#sidebar").classList.remove("open");$("#sideBackdrop").classList.remove("show");$("#menuToggle").setAttribute("aria-expanded","false")}
   function showView(target,updateHash=true){
     let view=String(target||"dashboardSection");
-    if(view==="referralCard"&&!["admin","viewer"].includes(auth?.role)){toast("เมนูส่งต่อ-รับกลับไม่อยู่ในสิทธิ์ผู้ใช้นี้",true);view="dashboardSection"}
-    if(view==="reportsSection"&&auth?.role!=="admin"){toast("เมนูรายงานสำหรับ Admin เท่านั้น",true);view="dashboardSection"}
+    if(view==="referralCard"&&!["admin","viewer","staff"].includes(auth?.role)){toast("เมนูส่งต่อ-รับกลับไม่อยู่ในสิทธิ์ผู้ใช้นี้",true);view="dashboardSection"}
+    if(view==="reportsSection"&&!["admin","staff"].includes(auth?.role)){toast("เมนูรายงานไม่อยู่ในสิทธิ์ผู้ใช้นี้",true);view="dashboardSection"}
     document.querySelectorAll(".app-view").forEach(el=>el.hidden=el.dataset.view!==view);
-    if(view==="reportsSection"&&auth?.role==="admin"){renderManagementReport();renderMonthlyRegistry()}
+    if(view==="reportsSection"&&["admin","staff"].includes(auth?.role)){renderManagementReport();renderMonthlyRegistry()}
     document.querySelectorAll(".side-link").forEach(link=>link.classList.toggle("active",link.dataset.nav===view));
     if(updateHash&&history.replaceState)history.replaceState(null,"","#"+view);
     window.scrollTo({top:0,behavior:"smooth"});closeSidebar();
   }
   function updateNavigationAccess(profile){
     const role=profile?.role||"";
-    $("#referralNav").style.display=["admin","viewer"].includes(role)?"flex":"none";
-    $("#reportsNav").style.display=role==="admin"?"flex":"none";
+    $("#referralNav").style.display=["admin","viewer","staff"].includes(role)?"flex":"none";
+    $("#reportsNav").style.display=["admin","staff"].includes(role)?"flex":"none";
     $("#reportGrid").style.display=role==="admin"?"grid":"none";
     $("#reportReadOnlyNote").style.display=role==="admin"?"none":"block";
     $("#referralReportOption").style.display=role==="admin"?"block":"none";
-    $("#managementReport").style.display=role==="admin"?"block":"none";
-    $("#monthlyRegistryReport").style.display=role==="admin"?"block":"none";
+    $("#managementReport").style.display=["admin","staff"].includes(role)?"block":"none";
+    $("#monthlyRegistryReport").style.display=["admin","staff"].includes(role)?"block":"none";
     $("#printManagementBtn").style.display=role==="admin"?"inline-flex":"none";
     if(!role)$("#reportReadOnlyNote").innerHTML='<div class="lock">🔒</div><strong>กรุณาเข้าสู่ระบบเพื่อใช้งานรายงาน</strong>';
     else if(role==="viewer")$("#reportReadOnlyNote").innerHTML='<div class="lock">🔒</div><strong>บัญชีรพ.แม่ข่ายมีสิทธิ์ดูข้อมูลเท่านั้น</strong><div class="panel-sub">ไม่สามารถดาวน์โหลดรายงานได้</div>';
+    else if(role==="staff")$("#reportReadOnlyNote").innerHTML='<div class="lock">🔒</div><strong>บัญชีเจ้าหน้าที่ดูรายงานได้ทุกส่วน</strong><div class="panel-sub">เป็นข้อมูลแบบอ่านอย่างเดียว ไม่สามารถดาวน์โหลดหรือดำเนินการจัดการได้</div>';
   }
   function showRedAlert(data,redSugar,redBP,criticalSugar=false){
     $("#redAlertTitle").textContent=criticalSugar?"🔴🔴 ค่าน้ำตาลเกินค่าวิกฤต":"พบผู้ป่วยระดับสีแดง";
@@ -608,7 +609,7 @@
     if(loadPromise)return loadPromise;
     loadPromise=(async()=>{setStatus("",records.length?"กำลังซิงก์ข้อมูลเบื้องหลัง":"กำลังโหลดข้อมูลครั้งแรก");setBusy(true);
     try{
-      const [result, referralResult] = await Promise.all([api("list"), ["admin","viewer"].includes(auth.role)?api("referrallist"):Promise.resolve({data:[]})]);
+      const [result, referralResult] = await Promise.all([api("list"), ["admin","viewer","staff"].includes(auth.role)?api("referrallist"):Promise.resolve({data:[]})]);
       records = Array.isArray(result.data) ? result.data : [];
       referrals = Array.isArray(referralResult.data) ? referralResult.data : [];
       records = records.map((r,i)=>({...r, _row:Number(r._row||r.row||i+5), _sheet:String(r._sheet||"รวม")}));
@@ -769,7 +770,7 @@
     const refPeriod=referrals.filter(r=>(!month||referralMonthOf(r)===month)&&(!village||String(r.village||"")===village)),currentRefs=[...latestReferralByHN().values()].filter(r=>r.type==="ส่งต่อ"&&(!village||String(r.village||"")===village));
     $("#mgPatients").textContent=latest.length.toLocaleString("th-TH");$("#mgVisits").textContent=`${period.length.toLocaleString("th-TH")} visits`;
     $("#mgControlled").textContent=(validBoth.length?Math.round(controlled.length/validBoth.length*100):0)+"%";$("#mgRed").textContent=red.length.toLocaleString("th-TH");$("#mgOverdue").textContent=overdue.length.toLocaleString("th-TH");$("#mgComplete").textContent=(latest.length?Math.round(complete/latest.length*100):0)+"%";$("#mgComorbid").textContent=comorbid.length.toLocaleString("th-TH");$("#mgElderly").textContent=elderly.length.toLocaleString("th-TH");
-    if(["admin","viewer"].includes(auth?.role)){$("#mgReferrals").textContent=refPeriod.filter(r=>r.type==="ส่งต่อ").length.toLocaleString("th-TH");$("#mgReferralCurrent").textContent=`กำลังส่งต่อ ${currentRefs.length.toLocaleString("th-TH")} ราย`}else{$("#mgReferrals").textContent="–";$("#mgReferralCurrent").textContent="ไม่มีสิทธิ์ดูข้อมูลส่งต่อ"}
+    if(["admin","viewer","staff"].includes(auth?.role)){$("#mgReferrals").textContent=refPeriod.filter(r=>r.type==="ส่งต่อ").length.toLocaleString("th-TH");$("#mgReferralCurrent").textContent=`กำลังส่งต่อ ${currentRefs.length.toLocaleString("th-TH")} ราย`}else{$("#mgReferrals").textContent="–";$("#mgReferralCurrent").textContent="ไม่มีสิทธิ์ดูข้อมูลส่งต่อ"}
     const trendSource=records.filter(r=>!village||String(r.village||"")===village),trend={};trendSource.forEach(r=>{const m=/^\d{4}-\d{2}$/.test(String(r._sheet||""))?String(r._sheet):String(r.recordDate||"").slice(0,7);if(/^\d{4}-\d{2}$/.test(m)){if(!trend[m])trend[m]={total:0,red:0};trend[m].total++;if(sugarLevel(r.bloodSugar)==="red"||bpLevel(r.bp2||r.bp1)==="red")trend[m].red++}});renderMiniBars("#mgTrend",Object.entries(trend).sort((a,b)=>a[0].localeCompare(b[0])).slice(-6).map(([m,x])=>({label:`${monthLabel(m)} · แดง ${x.red}`,value:x.total,color:x.red?"#d97706":"#0f766e"})));
     const vg={};latest.forEach(r=>{const v=String(r.village||"ไม่ระบุ");if(!vg[v])vg[v]={total:0,red:0};vg[v].total++;if(sugarLevel(r.bloodSugar)==="red"||bpLevel(r.bp2||r.bp1)==="red")vg[v].red++});renderMiniBars("#mgVillages",Object.entries(vg).sort((a,b)=>b[1].total-a[1].total).map(([v,x])=>({label:`หมู่ ${v} · แดง ${x.red}`,value:x.total,color:x.red?"#d97706":"#0f766e"})));
     const diseases=[{label:"DM",value:latest.filter(r=>isYes(r.dm)).length},{label:"HT",value:latest.filter(r=>isYes(r.ht)).length},{label:"Old CVA",value:latest.filter(r=>isYes(r.oldCva)).length},{label:"Hyperlipidaemia",value:latest.filter(r=>isYes(r.hyperlipidaemia)).length},{label:"CKD 3–5",value:latest.filter(r=>Number(r.ckdStage)>=3).length}];renderMiniBars("#mgDiseases",diseases);
@@ -806,7 +807,7 @@
 
   const registryPatientKey=r=>String(r.hn||"").trim()?`hn:${String(r.hn).trim()}`:`name:${patientQueueKey(r)}`;
   function buildMonthlyRegistryFilters(){
-    if(auth?.role!=="admin")return;
+    if(!["admin","staff"].includes(auth?.role))return;
     const monthSelect=$("#registryMonth"),villageSelect=$("#registryVillage"),oldMonth=monthSelect.value,oldVillage=villageSelect.value;
     const months=[...new Set(records.map(r=>/^\d{4}-\d{2}$/.test(String(r._sheet||""))?String(r._sheet):String(r.recordDate||"").slice(0,7)).filter(m=>/^\d{4}-\d{2}$/.test(m)))].sort().reverse();
     const villages=[...new Set(records.filter(r=>r._sheet==="รวม").map(r=>String(r.village||"").trim()).filter(Boolean))].sort((a,b)=>Number(a)-Number(b)||a.localeCompare(b,"th"));
@@ -823,7 +824,7 @@
     return masters.sort((a,b)=>Number(a.village)-Number(b.village)||String(a.firstName||"").localeCompare(String(b.firstName||""),"th")).map(patient=>({patient,visit:latest.get(registryPatientKey(patient))||null}));
   }
   function renderMonthlyRegistry(){
-    if(auth?.role!=="admin")return;
+    if(!["admin","staff"].includes(auth?.role))return;
     const rows=monthlyRegistryRows(),recorded=rows.filter(x=>x.visit).length,month=$("#registryMonth").value,village=$("#registryVillage").value;
     $("#registrySummary").textContent=`${monthLabel(month)} · ${village?`หมู่ ${village}`:"ทุกหมู่บ้าน"} · ผู้ป่วย ${rows.length} คน · บันทึกแล้ว ${recorded} คน · ยังไม่บันทึก ${rows.length-recorded} คน`;
     $("#monthlyRegistryBody").innerHTML=rows.length?rows.map((x,i)=>{const p=x.patient,v=x.visit;return `<tr><td>${i+1}</td><td>${fmt(p.village)}</td><td><strong>${fmt(p.hn)}</strong></td><td class="name">${fmt(p.firstName)} ${fmt(p.lastName)}</td><td>${v?formatThaiDate(v.recordDate):"–"}</td><td>${v?fmt(v.weight):"–"}</td><td>${v?fmt(v.height):"–"}</td><td>${v?fmt(v.waist):"–"}</td><td>${v?fmt(v.bp2||v.bp1):"–"}</td><td>${v?fmt(v.pulse):"–"}</td><td>${v?fmt(v.bloodSugar):"–"}</td><td>${v?formatThaiDate(v.appointmentDate):"–"}</td><td><span class="recorded-badge${v?"":" missing"}">${v?"บันทึกแล้ว":"ยังไม่บันทึก"}</span></td></tr>`}).join(""):'<tr><td colspan="13"><div class="empty">ไม่พบผู้ป่วยในหมู่ที่เลือก</div></td></tr>';
@@ -943,7 +944,7 @@ ${worksheet("สรุปค่าน้ำตาล",summaryTable("sugar"))}${w
     $("#referralBody").innerHTML=rows.length?rows.map(r=>`<tr><td>${formatThaiDate(r.referralDate)}</td><td><span class="badge ${r.type==="ส่งต่อ"?"ht":"dm"}">${esc(r.type)}</span></td><td><strong>${fmt(r.hn)}</strong></td><td class="name">${fmt(r.firstName)} ${fmt(r.lastName)}</td><td>${fmt(r.village)}</td><td>${fmt(r.reason)}</td><td>${formatThaiDate(r.followupDate)}</td><td>${fmt(r.note)}</td><td>${auth?.role==="admin"?`<button class="icon-btn" title="ลบ" onclick="deleteReferral('${esc(r.id)}')">⌫</button>`:'<span class="badge none">ดูเท่านั้น</span>'}</td></tr>`).join(""):'<tr><td colspan="9"><div class="empty">ไม่พบรายการในเดือนนี้</div></td></tr>';
   }
   window.openReferralPatients = kind => {
-    if(!["admin","viewer"].includes(auth?.role)){toast("รายการนี้ดูได้เฉพาะ Admin และรพ.แม่ข่าย",true);return}
+    if(!["admin","viewer","staff"].includes(auth?.role)){toast("ไม่มีสิทธิ์ดูรายการส่งต่อ-รับกลับ",true);return}
     const month=$("#referralMonth").value;
     let rows,title;
     if(kind==="current"){
@@ -1046,12 +1047,12 @@ ${worksheet("สรุปค่าน้ำตาล",summaryTable("sugar"))}${w
     $("#clearDayBtn").style.display=profile.role==="admin"?"inline-flex":"none";
     $("#repairRegistryBtn").style.display=profile.role==="admin"?"inline-flex":"none";
     $("#changePasswordBtn").style.display=profile.role==="admin"?"inline-flex":"none";
-    $("#referralBtn").style.display=["admin","viewer"].includes(profile.role)?"inline-flex":"none";
-    $("#referralCard").style.display=["admin","viewer"].includes(profile.role)?"block":"none";
+    $("#referralBtn").style.display=["admin","viewer","staff"].includes(profile.role)?"inline-flex":"none";
+    $("#referralCard").style.display=["admin","viewer","staff"].includes(profile.role)?"block":"none";
     $("#newReferralBtn").style.display=profile.role==="admin"?"inline-flex":"none";
     $("#referralExportBtn").style.display=profile.role==="admin"?"inline-flex":"none";
-    $("#exportBtn").style.display=profile.role==="viewer"?"none":"inline-flex";
-    $("#summaryExportBtn").style.display=profile.role==="viewer"?"none":"inline-flex";
+    $("#exportBtn").style.display=["viewer","staff"].includes(profile.role)?"none":"inline-flex";
+    $("#summaryExportBtn").style.display=["viewer","staff"].includes(profile.role)?"none":"inline-flex";
     $("#patientToolbar").style.display=profile.role==="village"?"none":"";
     queueMode=profile.role==="viewer"?"all":"pending";
     $("#queueDate").value=preferenceGet("dmht_record_date")||todayInput();
