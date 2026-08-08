@@ -180,8 +180,8 @@
       </article>
     </section>
     <section class="middle">
-      <article class="card panel"><div class="panel-head"><div><div class="panel-title">สัดส่วนสีค่าน้ำตาล</div><div class="panel-sub">เทียบสัดส่วน visit แต่ละระดับสี</div></div></div><div class="donut-layout"><div class="donut" id="sugarDonut"><div class="donut-center"><strong id="sugarDonutTotal">0</strong><span>visits ที่มีผลน้ำตาล</span></div></div><div class="donut-legend" id="sugarDonutLegend"></div></div></article>
-      <article class="card panel"><div class="panel-head"><div><div class="panel-title">สัดส่วนสีความดันโลหิต</div><div class="panel-sub">เทียบสัดส่วน visit แต่ละระดับสี</div></div></div><div class="donut-layout"><div class="donut" id="bpDonut"><div class="donut-center"><strong id="bpDonutTotal">0</strong><span>visits ที่มีผลความดัน</span></div></div><div class="donut-legend" id="bpDonutLegend"></div></div></article>
+      <article class="card panel"><div class="panel-head"><div><div class="panel-title">สัดส่วนสีค่าน้ำตาล</div><div class="panel-sub" id="sugarDonutSub">ตามวันที่ลงข้อมูลที่เลือก</div></div></div><div class="donut-layout"><div class="donut" id="sugarDonut"><div class="donut-center"><strong id="sugarDonutTotal">0</strong><span>ครั้งตรวจที่มีผลน้ำตาล</span></div></div><div class="donut-legend" id="sugarDonutLegend"></div></div></article>
+      <article class="card panel"><div class="panel-head"><div><div class="panel-title">สัดส่วนสีความดันโลหิต</div><div class="panel-sub" id="bpDonutSub">ตามวันที่ลงข้อมูลที่เลือก</div></div></div><div class="donut-layout"><div class="donut" id="bpDonut"><div class="donut-center"><strong id="bpDonutTotal">0</strong><span>ครั้งตรวจที่มีผลความดัน</span></div></div><div class="donut-legend" id="bpDonutLegend"></div></div></article>
     </section>
     <section class="card panel" style="margin-top:14px"><div class="panel-head"><div><div class="panel-title" id="monthlyTrendTitle">แนวโน้มสัดส่วนค่าน้ำตาลรายเดือน</div><div class="panel-sub">แต่ละเดือนแสดง 4 แท่งแยกตามสี เพื่อเปรียบเทียบสัดส่วนได้ชัดเจน · ตัวเลขด้านบน = สีส้ม+สีแดง</div></div><div style="display:flex;gap:8px;flex-wrap:wrap"><select id="trendMetric" aria-label="เลือกประเภทผลตรวจ"><option value="sugar">ค่าน้ำตาล</option><option value="bp">ความดันโลหิต</option></select><select id="sugarChartMonth" aria-label="เลือกเดือนกราฟ"><option value="">เทียบทุกเดือน</option></select></div></div><div class="stack-counts" id="monthlyTrendLegend"><span>🟢 เขียว 60–125</span><span>🟡 เหลือง 126–154</span><span>🟠 ส้ม 155–182</span><span>🔴 แดง &lt;60 หรือ ≥183</span><span>🔴🔴 วิกฤต &lt;60 หรือ &gt;250</span></div><div class="trend-insight" id="monthlySugarInsight">กำลังวิเคราะห์แนวโน้ม…</div><div class="proportion-scroll"><div class="proportion-chart" id="monthlySugarBars"><div class="empty">กำลังโหลดข้อมูล…</div></div></div></section>
     </div>
@@ -606,6 +606,7 @@
     const ages=Array.isArray(s.ageGroups)?s.ageGroups:[], amax=Math.max(1,...ages.map(x=>Number(x.count||0)));
     $("#ageChart").innerHTML=ages.map(x=>`<div class="age-col"><div class="age-num">${Number(x.count||0)}</div><div class="age-bar" style="height:${Math.max(3,Number(x.count||0)/amax*155)}px"></div><div class="age-label">${esc(x.label)}</div></div>`).join("");
     $("#avgAge").textContent=s.avgAge!==null&&s.avgAge!==undefined?`เฉลี่ย ${s.avgAge} ปี`:"เฉลี่ย – ปี";
+    $("#sugarDonutSub").textContent="ข้อมูลภาพรวมล่าสุด · รวมทุกวันที่มีผลตรวจ";$("#bpDonutSub").textContent="ข้อมูลภาพรวมล่าสุด · รวมทุกวันที่มีผลตรวจ";
     renderColorPanels(s.sugarLevels||{},s.bpLevels||{});
     currentMonthlySugar=Array.isArray(s.monthlySugar)?s.monthlySugar:[];currentMonthlyBP=Array.isArray(s.monthlyBP)?s.monthlyBP:[];renderDonutCharts(s.sugarLevels||{},s.bpLevels||{});renderMonthlySugarChart();
   }
@@ -687,7 +688,6 @@
     $("#prevBtn").disabled=page<=1; $("#nextBtn").disabled=page>=pages;
   }
   function updateDashboard(data=records) {
-    dashboardData=data;
     const patientMap=new Map();data.forEach(r=>{const key=`${String(r.firstName||"").trim().toLowerCase()}|${String(r.lastName||"").trim().toLowerCase()}`;if(key!=="|"&&(!patientMap.has(key)||r._sheet==="รวม"))patientMap.set(key,r)});const patients=[...patientMap.values()];
     $("#kpiTotal").textContent=patients.length.toLocaleString("th-TH");
     $("#kpiDM").textContent=patients.filter(r=>isYes(r.dm)).length.toLocaleString("th-TH");
@@ -702,8 +702,13 @@
     const amax=Math.max(1,...counts);
     $("#ageChart").innerHTML=ranges.map((x,i)=>`<div class="age-col"><div class="age-num">${counts[i]}</div><div class="age-bar" style="height:${Math.max(3,counts[i]/amax*155)}px"></div><div class="age-label">${x[0]}</div></div>`).join("");
     $("#avgAge").textContent=ages.length?`เฉลี่ย ${Math.round(ages.reduce((a,b)=>a+b,0)/ages.length)} ปี`:"เฉลี่ย – ปี";
+    const selectedDate=$("#queueDate")?.value||preferenceGet("dmht_record_date")||todayInput();
+    const selectedVisits=data.filter(r=>r._sheet!=="รวม"&&recordDateKey(r.recordDate)===selectedDate);
+    dashboardData=selectedVisits;
+    const dailyScope=`ข้อมูลวันที่ ${formatThaiDate(selectedDate)} · ตรงกับแท็บบันทึกแล้ว`;
+    $("#sugarDonutSub").textContent=dailyScope;$("#bpDonutSub").textContent=dailyScope;
     const sugarCounts={green:0,yellow:0,orange:0,red:0},bpCounts={green:0,yellow:0,orange:0,red:0};
-    data.forEach(r=>{const s=sugarLevel(r.bloodSugar),b=bpLevel(r.bp2||r.bp1);if(sugarCounts[s]!==undefined)sugarCounts[s]++;if(bpCounts[b]!==undefined)bpCounts[b]++});
+    selectedVisits.forEach(r=>{const s=sugarLevel(r.bloodSugar),b=bpLevel(r.bp2||r.bp1);if(sugarCounts[s]!==undefined)sugarCounts[s]++;if(bpCounts[b]!==undefined)bpCounts[b]++});
     renderColorPanels(sugarCounts,bpCounts);
     const monthly={},monthlyBP={};data.forEach(r=>{const m=/^\d{4}-\d{2}$/.test(String(r._sheet||""))?String(r._sheet):String(r.recordDate||"").slice(0,7);if(!/^\d{4}-\d{2}$/.test(m))return;if(!monthly[m])monthly[m]={green:0,yellow:0,orange:0,red:0,none:0};if(!monthlyBP[m])monthlyBP[m]={green:0,yellow:0,orange:0,red:0,none:0};monthly[m][sugarLevel(r.bloodSugar)]++;monthlyBP[m][bpLevel(r.bp2||r.bp1)]++});currentMonthlySugar=Object.entries(monthly).sort((a,b)=>a[0].localeCompare(b[0])).map(([month,levels])=>({month,levels}));currentMonthlyBP=Object.entries(monthlyBP).sort((a,b)=>a[0].localeCompare(b[0])).map(([month,levels])=>({month,levels}));renderDonutCharts(sugarCounts,bpCounts);renderMonthlySugarChart();
   }
