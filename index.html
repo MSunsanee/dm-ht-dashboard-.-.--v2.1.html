@@ -597,7 +597,11 @@
       records = Array.isArray(result.data) ? result.data : [];
       referrals = Array.isArray(referralResult.data) ? referralResult.data : [];
       records = records.map((r,i)=>({...r, _row:Number(r._row||r.row||i+5), _sheet:String(r._sheet||"รวม")}));
-      setStatus("ok", `เข้าสู่ระบบแล้ว · ${records.length} ราย`);
+      // records includes both master patients and monthly visit rows.  The
+      // signed-in status must show unique patients, not the raw row count.
+      const masterCount=records.filter(r=>r._sheet==="รวม").length;
+      const patientCount=masterCount||new Set(records.map(patientQueueKey).filter(k=>k!=="||")).size;
+      setStatus("ok", `เข้าสู่ระบบแล้ว · ${patientCount} ราย`);
       buildFilters();if(auth?.role==="village")$("#monthFilter").value="รวม";applyFilters();buildReferralMonths();renderReferrals();buildManagementFilters();renderManagementReport();
       if(showToast) toast("อัปเดตข้อมูลล่าสุดแล้ว");
     } catch(err) {
