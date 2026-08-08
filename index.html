@@ -3,6 +3,9 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+  <meta http-equiv="Pragma" content="no-cache">
+  <meta http-equiv="Expires" content="0">
   <meta name="theme-color" content="#0f766e">
   <title>ทะเบียนผู้ป่วย DM–HT | รพ.สต.บ้านชมภูพานเหนือ</title>
   <style>
@@ -532,7 +535,8 @@
   async function api(action, payload={}) {
     const token=auth?.token||storageGet("dmht_token");
     const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),35000);let response;
-    try{response=await fetch(GAS_URL,{method:"POST",redirect:"follow",headers:{"Content-Type":"text/plain;charset=utf-8"},body:JSON.stringify({action,token,...payload}),signal:controller.signal})}
+    const requestUrl=GAS_URL+(GAS_URL.includes("?")?"&":"?")+"_ts="+Date.now();
+    try{response=await fetch(requestUrl,{method:"POST",redirect:"follow",cache:"no-store",headers:{"Content-Type":"text/plain;charset=utf-8"},body:JSON.stringify({action,token,...payload}),signal:controller.signal})}
     catch(err){if(err.name==="AbortError")throw new Error("การเชื่อมต่อนานเกิน 35 วินาที กรุณาตรวจอินเทอร์เน็ตแล้วลองใหม่");throw err}
     finally{clearTimeout(timer)}
     if (!response.ok) throw new Error("HTTP "+response.status);
@@ -699,8 +703,8 @@
     const highPct=x=>total(x)?Math.round(highCount(x)/total(x)*100):0;
 
     if(!allRows.length){
-      $("#monthlySugarInsight").innerHTML=`ยังไม่มีข้อมูล${metricName}รายเดือน กรุณา Deploy <strong>Code.gs เวอร์ชันล่าสุด</strong> แล้วเปิดหน้าเว็บใหม่`;
-      $("#monthlySugarBars").innerHTML=`<div class="empty">ยังไม่มีข้อมูล${metricName}รายเดือน</div>`;
+      $("#monthlySugarInsight").innerHTML=`ยังไม่มีข้อมูล${metricName}รายเดือนในคำตอบล่าสุด กรุณากด <strong>รีเฟรช</strong> หรือลองใหม่อีกครั้ง`;
+      $("#monthlySugarBars").innerHTML=`<div class="empty">กำลังรอข้อมูล${metricName}รายเดือน…</div>`;
       return;
     }
 
