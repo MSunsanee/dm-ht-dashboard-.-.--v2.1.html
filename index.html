@@ -184,6 +184,7 @@
 
     <section class="card table-card locked section-anchor app-view" id="dataCard" data-view="dataCard" hidden>
       <div class="toolbar" id="patientToolbar">
+        <button class="btn btn-soft" id="lineTestBtn" style="display:none">🔔 ทดสอบ LINE ทุกคน</button>
         <div class="search"><span>⌕</span><input id="searchInput" autocomplete="off" placeholder="ค้นหา HN ชื่อ นามสกุล หรือบ้านเลขที่"></div>
         <select id="monthFilter" aria-label="กรองตามเดือน"><option value="">ทุกเดือน</option></select>
         <select id="villageFilter" aria-label="กรองตามหมู่"><option value="">ทุกหมู่</option></select>
@@ -398,7 +399,7 @@
 
 <script>
   const GAS_URL = "https://script.google.com/macros/s/AKfycbx9y2f2fVFf2dGYV1LDuC9xISrqghO0vDg0PZjLE5ILkN0Nxf6utz3gAKCqqkIdoMt2/exec";
-  const REQUIRED_API_VERSION = 8;
+  const REQUIRED_API_VERSION = 9;
   const PAGE_SIZE = 20;
   const fields = ["recordDate","hn","firstName","lastName","birthDate","age","phone","houseNo","village","weight","height","waist","bp1","bp2","pulse","bloodSugar","appointmentDate","medicationAt","dm","ht","oldCva","hyperlipidaemia","ckdStage"];
   let records = [], filtered = [], dashboardData = [], referrals = [], currentMonthlySugar = [], currentMonthlyBP = [], page = 1, editing = null, deleting = null, auth = null, formMode = "basic", loadPromise = null, queueMode = "all";
@@ -1047,6 +1048,7 @@ ${worksheet("สรุปค่าน้ำตาล",summaryTable("sugar"))}${w
     $("#clearDayBtn").style.display=profile.role==="admin"?"inline-flex":"none";
     $("#repairRegistryBtn").style.display=profile.role==="admin"?"inline-flex":"none";
     $("#changePasswordBtn").style.display=profile.role==="admin"?"inline-flex":"none";
+    $("#lineTestBtn").style.display=profile.role==="admin"?"inline-flex":"none";
     $("#referralBtn").style.display=["admin","viewer","staff"].includes(profile.role)?"inline-flex":"none";
     $("#referralCard").style.display=["admin","viewer","staff"].includes(profile.role)?"block":"none";
     $("#newReferralBtn").style.display=profile.role==="admin"?"inline-flex":"none";
@@ -1069,6 +1071,7 @@ ${worksheet("สรุปค่าน้ำตาล",summaryTable("sugar"))}${w
     $("#clearDayBtn").style.display="none";
     $("#repairRegistryBtn").style.display="none";
     $("#changePasswordBtn").style.display="none";
+    $("#lineTestBtn").style.display="none";
     $("#addBtn").style.display="none";
     $("#referralBtn").style.display="none";$("#referralCard").style.display="none";
     $("#newReferralBtn").style.display="none";$("#referralExportBtn").style.display="none";
@@ -1104,6 +1107,11 @@ ${worksheet("สรุปค่าน้ำตาล",summaryTable("sugar"))}${w
   document.querySelectorAll("[data-login-close]").forEach(b=>b.addEventListener("click",()=>$("#loginOverlay").classList.remove("show")));
   document.querySelectorAll("[data-password-close]").forEach(b=>b.addEventListener("click",()=>$("#passwordOverlay").classList.remove("show")));
   $("#changePasswordBtn").addEventListener("click",()=>{if(auth?.role!=="admin")return;$("#passwordForm").reset();$("#passwordOverlay").classList.add("show");setTimeout(()=>$("#passwordForm").elements.currentPassword.focus(),50)});
+  $("#lineTestBtn").addEventListener("click",async()=>{
+    if(auth?.role!=="admin"||!confirm("ส่งข้อความทดสอบไปยังเพื่อน LINE OA ทุกคนตอนนี้หรือไม่?"))return;
+    const btn=$("#lineTestBtn"),label=btn.textContent;btn.disabled=true;btn.innerHTML='<i class="loader"></i> กำลังทดสอบ';
+    try{const result=await api("linetestbroadcast"),quota=result.quota||{},usage=result.usage||{};toast(`${result.message||"ส่ง Broadcast สำเร็จ"} · ใช้แล้ว ${Number(usage.totalUsage||0).toLocaleString("th-TH")}${quota.value?`/${Number(quota.value).toLocaleString("th-TH")}`:""} ข้อความ`)}catch(err){toast("ทดสอบ LINE ไม่สำเร็จ: "+err.message,true)}finally{btn.disabled=false;btn.textContent=label}
+  });
   $("#passwordForm").addEventListener("submit",async e=>{
     e.preventDefault();const f=e.currentTarget,currentPassword=f.elements.currentPassword.value,newPassword=f.elements.newPassword.value,confirmPassword=f.elements.confirmPassword.value,btn=$("#savePasswordBtn");
     if(newPassword!==confirmPassword){toast("การยืนยันรหัสผ่านใหม่ไม่ตรงกัน",true);return}
