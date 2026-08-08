@@ -636,7 +636,9 @@
       const monthOK=queueMode!=="all"||!m||String(r._sheet||"")===m;
       return (!q||hay.includes(q)) && monthOK && (!v||String(r.village??"")===v) && matchesDisease(r,d);
     });
-    page=1; renderTable(); updateDashboard(filtered);
+    // ตารางใช้ชุดข้อมูลตามคิว/ตัวกรอง แต่ Dashboard ต้องใช้ข้อมูลทั้งหมดที่ผู้ใช้มีสิทธิ์เห็น
+    // เพื่อไม่ให้ยอดรวมและกราฟลดลงเมื่อผู้ป่วยถูกย้ายจาก "รอบันทึก" ไป "บันทึกแล้ว"
+    page=1; renderTable(); updateDashboard(records);
   }
   function renderTable() {
     const pages=Math.max(1,Math.ceil(filtered.length/PAGE_SIZE)); page=Math.min(page,pages);
