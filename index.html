@@ -398,7 +398,7 @@
 
 <script>
   const GAS_URL = "https://script.google.com/macros/s/AKfycbx9y2f2fVFf2dGYV1LDuC9xISrqghO0vDg0PZjLE5ILkN0Nxf6utz3gAKCqqkIdoMt2/exec";
-  const REQUIRED_API_VERSION = 5;
+  const REQUIRED_API_VERSION = 6;
   const PAGE_SIZE = 20;
   const fields = ["recordDate","hn","firstName","lastName","birthDate","age","phone","houseNo","village","weight","height","waist","bp1","bp2","pulse","bloodSugar","appointmentDate","medicationAt","dm","ht","oldCva","hyperlipidaemia","ckdStage"];
   let records = [], filtered = [], dashboardData = [], referrals = [], currentMonthlySugar = [], currentMonthlyBP = [], page = 1, editing = null, deleting = null, auth = null, formMode = "basic", loadPromise = null, queueMode = "all";
@@ -1035,7 +1035,7 @@ ${worksheet("สรุปค่าน้ำตาล",summaryTable("sugar"))}${w
     $("#dataCard").classList.remove("locked");
     $("#referralCard").classList.remove("locked");
     $("#userChip").style.display="block";
-    $("#userChip").textContent=profile.role==="admin"?"Admin · จัดการได้ทั้งหมด":profile.role==="viewer"?"รพ.แม่ข่าย · ดูได้อย่างเดียว":`ผู้ใช้หมู่ ${profile.village}`;
+    $("#userChip").textContent=profile.role==="admin"?"Admin · จัดการได้ทั้งหมด":profile.role==="viewer"?"รพ.แม่ข่าย · ดูได้อย่างเดียว":profile.role==="staff"?`${profile.displayName||profile.username} · ${profile.position||"เจ้าหน้าที่"}`:`ผู้ใช้หมู่ ${profile.village}`;
     $("#loginBtn").textContent="ออกจากระบบ";
     $("#addBtn").style.display=profile.role==="admin"?"inline-flex":"none";
     $("#mobileAddBtn").classList.toggle("active",profile.role==="admin");
