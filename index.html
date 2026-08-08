@@ -398,7 +398,7 @@
 
 <script>
   const GAS_URL = "https://script.google.com/macros/s/AKfycbx9y2f2fVFf2dGYV1LDuC9xISrqghO0vDg0PZjLE5ILkN0Nxf6utz3gAKCqqkIdoMt2/exec";
-  const REQUIRED_API_VERSION = 6;
+  const REQUIRED_API_VERSION = 7;
   const PAGE_SIZE = 20;
   const fields = ["recordDate","hn","firstName","lastName","birthDate","age","phone","houseNo","village","weight","height","waist","bp1","bp2","pulse","bloodSugar","appointmentDate","medicationAt","dm","ht","oldCva","hyperlipidaemia","ckdStage"];
   let records = [], filtered = [], dashboardData = [], referrals = [], currentMonthlySugar = [], currentMonthlyBP = [], page = 1, editing = null, deleting = null, auth = null, formMode = "basic", loadPromise = null, queueMode = "all";
@@ -666,13 +666,13 @@
     $("#tableBody").innerHTML = rows.length ? rows.map((r,i)=>`
       <tr>
         <td class="muted">${start+i+1}</td><td>${formatThaiDate(r.recordDate)}</td><td><strong>${fmt(r.hn)}</strong></td>
-        <td class="name">${auth?.role!=="viewer"?`<button class="patient-link" onclick="${r._sheet==="รวม"?"openVisit":"openEdit"}('${esc(r._sheet)}',${Number(r._row)})">${fmt(r.firstName)} ${fmt(r.lastName)}</button>`:`${fmt(r.firstName)} ${fmt(r.lastName)}`}</td><td>${r.birthDate?esc(birthDateBE(r.birthDate)):"–"}</td><td>${fmt(r.age)}</td><td>${fmt(r.phone)}</td>
+        <td class="name">${auth?.role!=="viewer"&&(r._sheet==="รวม"||auth?.role!=="staff")?`<button class="patient-link" onclick="${r._sheet==="รวม"?"openVisit":"openEdit"}('${esc(r._sheet)}',${Number(r._row)})">${fmt(r.firstName)} ${fmt(r.lastName)}</button>`:`${fmt(r.firstName)} ${fmt(r.lastName)}`}</td><td>${r.birthDate?esc(birthDateBE(r.birthDate)):"–"}</td><td>${fmt(r.age)}</td><td>${fmt(r.phone)}</td>
         <td>${r.houseNo?`เลขที่ ${esc(r.houseNo)}`:"–"} ${r.village?`หมู่ ${esc(r.village)}`:""}</td>
         <td>${fmt(r.weight)} / ${fmt(r.height)}</td><td>${r.bp1?levelBadge(bpLevel(r.bp1),r.bp1):"–"}${r.bp2?` ${levelBadge(bpLevel(r.bp2),r.bp2)}`:""}</td>
         <td>${r.bloodSugar!==""&&r.bloodSugar!=null?levelBadge(sugarLevel(r.bloodSugar),r.bloodSugar):"–"}</td><td>${formatThaiDate(r.appointmentDate)}</td><td>${fmt(r.medicationAt)}</td>
         <td>${conditionBadges(r)}</td><td>${referralStatus.has(String(r.hn))?`<span class="badge ${referralStatus.get(String(r.hn)).type==="ส่งต่อ"?"ht":"dm"}">${esc(referralStatus.get(String(r.hn)).type)}</span>`:'<span class="badge none">รับยาตามปกติ</span>'}</td>
         <td>${parseAttachments(r.attachments).length?`<button class="btn btn-soft" onclick="showVisitFiles('${esc(r._sheet)}',${Number(r._row)})">📎 ${parseAttachments(r.attachments).length} ไฟล์</button>`:'<span class="muted">ไม่มีไฟล์</span>'}</td>
-        <td><div class="actions">${auth?.role==="admin"?`<button class="icon-btn" title="ส่งต่อ–รับกลับ" onclick="openReferral('${esc(r.hn)}')">⇄</button>`:""}${auth?.role!=="viewer"?`<button class="icon-btn" title="แก้ไข" onclick="openEdit('${esc(r._sheet)}',${Number(r._row)})">✎</button>`:""}
+        <td><div class="actions">${auth?.role==="admin"?`<button class="icon-btn" title="ส่งต่อ–รับกลับ" onclick="openReferral('${esc(r.hn)}')">⇄</button>`:""}${!["viewer","staff"].includes(auth?.role)?`<button class="icon-btn" title="แก้ไข" onclick="openEdit('${esc(r._sheet)}',${Number(r._row)})">✎</button>`:""}
         ${auth?.role==="admin"?`<button class="icon-btn" title="ลบ" onclick="openDelete('${esc(r._sheet)}',${Number(r._row)})">⌫</button>`:""}</div></td>
       </tr>`).join("") : '<tr><td colspan="17"><div class="empty"><div class="big">⌕</div>ไม่พบข้อมูลที่ตรงกับเงื่อนไข</div></td></tr>';
     $("#resultText").textContent=`พบ ${filtered.length.toLocaleString("th-TH")} รายการ${filtered.length?` · แสดง ${start+1}–${Math.min(start+PAGE_SIZE,filtered.length)}`:""}`;
@@ -1017,7 +1017,10 @@ ${worksheet("สรุปค่าน้ำตาล",summaryTable("sugar"))}${w
     $("#formOverlay").classList.add("show"); setTimeout(()=>mode==="visit"?f.elements.weight.focus():f.elements.firstName.focus(),50);
   }
   function closeForm(){ $("#formOverlay").classList.remove("show"); editing=null }
-  window.openEdit = (sheet,row) => { const r=records.find(x=>x._sheet===sheet&&Number(x._row)===Number(row)); if(r)openForm(r,sheet==="รวม"?"basicedit":"edit") };
+  window.openEdit = (sheet,row) => {
+    if(["viewer","staff"].includes(auth?.role)){toast("บัญชีนี้ดูข้อมูลและบันทึก Visit ใหม่ได้ แต่แก้ไขข้อมูลเดิมไม่ได้",true);return}
+    const r=records.find(x=>x._sheet===sheet&&Number(x._row)===Number(row)); if(r)openForm(r,sheet==="รวม"?"basicedit":"edit");
+  };
   window.openVisit = (sheet,row) => {
     const selected=records.find(r=>r._sheet===sheet&&Number(r._row)===Number(row));if(!selected)return;
     const master=records.find(r=>r._sheet==="รวม"&&String(r.firstName).trim()===String(selected.firstName).trim()&&String(r.lastName).trim()===String(selected.lastName).trim())||selected;
@@ -1122,6 +1125,7 @@ ${worksheet("สรุปค่าน้ำตาล",summaryTable("sugar"))}${w
 
   $("#patientForm").addEventListener("submit",async e=>{
     e.preventDefault(); const btn=$("#saveBtn"), fd=new FormData(e.currentTarget), data={};
+    if(auth?.role==="staff"&&formMode!=="visit"){toast("บัญชีนี้บันทึก Visit ใหม่ได้ แต่แก้ไขข้อมูลเดิมไม่ได้",true);return}
     fields.forEach(k=>data[k]=String(fd.get(k)??"").trim());
     const wasEditing=formMode==="edit"||formMode==="basicedit", editRow=editing?editing._row:null, sourceSheet=editing?editing._sheet:null, selectedFiles=[...(e.currentTarget.elements.visitFiles.files||[])], existingCount=parseAttachments(editing?.attachments).length;
     if(selectedFiles.length+existingCount>3){toast("แนบไฟล์ได้ไม่เกิน 3 ไฟล์ต่อ visit",true);return}
