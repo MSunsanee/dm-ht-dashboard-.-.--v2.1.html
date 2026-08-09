@@ -600,7 +600,7 @@
     return age>=0?age:"";
   };
 
-  async function api(action, payload={}) {
+  async function apiOnce(action, payload={}) {
     const token=auth?.token||storageGet("dmht_token");
     const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),35000);let response;
     const requestUrl=GAS_URL+(GAS_URL.includes("?")?"&":"?")+"_ts="+Date.now();
@@ -616,6 +616,19 @@
       throw new Error(data.message || "ไม่สามารถทำรายการได้");
     }
     return data;
+  }
+  async function api(action,payload={}) {
+    const retryable=["summary","list","referrallist","session"].includes(action),attempts=retryable?3:1;
+    let lastError;
+    for(let attempt=1;attempt<=attempts;attempt++){
+      try{return await apiOnce(action,payload)}catch(err){
+        lastError=err;
+        if(attempt>=attempts||/เซสชัน|เข้าสู่ระบบ|เวอร์ชันเก่า|ไม่รู้จักคำสั่ง/.test(String(err.message||"")))throw err;
+        setStatus("",`การเชื่อมต่อช้า · กำลังลองใหม่ ${attempt}/${attempts-1}`);
+        await new Promise(resolve=>setTimeout(resolve,700*attempt));
+      }
+    }
+    throw lastError;
   }
 
   function setStatus(type, text) {
@@ -681,7 +694,9 @@
     if(loadPromise)return loadPromise;
     loadPromise=(async()=>{setStatus("",records.length?"กำลังซิงก์ข้อมูลเบื้องหลัง":"กำลังโหลดข้อมูลครั้งแรก");setBusy(true);
     try{
-      const [result, referralResult] = await Promise.all([api("list"), ["admin","viewer","staff","demo"].includes(auth.role)?api("referrallist"):Promise.resolve({data:[]})]);
+      const [listState,referralState]=await Promise.allSettled([api("list"),["admin","viewer","staff","demo"].includes(auth.role)?api("referrallist"):Promise.resolve({data:[]})]);
+      if(listState.status!=="fulfilled")throw listState.reason;
+      const result=listState.value,referralResult=referralState.status==="fulfilled"?referralState.value:{data:referrals};
       records = Array.isArray(result.data) ? result.data : [];
       referrals = Array.isArray(referralResult.data) ? referralResult.data : [];
       records = records.map((r,i)=>({...r, _row:Number(r._row||r.row||i+5), _sheet:String(r._sheet||"รวม")}));
@@ -693,7 +708,7 @@
       buildFilters();if(auth?.role==="village")$("#monthFilter").value="รวม";applyFilters();buildReferralMonths();renderReferrals();buildManagementFilters();renderManagementReport();buildMonthlyRegistryFilters();renderMonthlyRegistry();
       if(showToast) toast("อัปเดตข้อมูลล่าสุดแล้ว");
     } catch(err) {
-      records=[]; filtered=[]; renderTable(); updateDashboard([]);
+      if(!records.length){filtered=[];renderTable();updateDashboard([])}
       setStatus("bad","เชื่อมต่อไม่สำเร็จ");
       toast("โหลดข้อมูลไม่สำเร็จ: "+err.message,true);
       if(/เซสชัน|เข้าสู่ระบบ/.test(err.message)) showLoggedOut();
