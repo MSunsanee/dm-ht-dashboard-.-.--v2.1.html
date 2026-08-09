@@ -714,15 +714,15 @@
   }
   function applyFilters() {
     const q=$("#searchInput").value.trim().toLowerCase(), m=$("#monthFilter").value, v=$("#villageFilter").value, d=$("#diseaseFilter").value,from=$("#rangeFrom").value,to=$("#rangeTo").value;
-    const queueDate=$("#queueDate").value||preferenceGet("dmht_record_date")||todayInput();
-    const dayVisits=records.filter(r=>r._sheet!=="รวม"&&recordDateKey(r.recordDate)===queueDate);
-    const doneKeys=new Set(dayVisits.map(patientQueueKey));
+    const queueDate=$("#queueDate").value||preferenceGet("dmht_record_date")||todayInput(),queueMonth=String(queueDate).slice(0,7);
+    const monthVisits=records.filter(r=>{if(r._sheet==="รวม")return false;const visitMonth=/^\d{4}-\d{2}$/.test(String(r._sheet||""))?String(r._sheet):recordDateKey(r.recordDate).slice(0,7);return visitMonth===queueMonth});
+    const completedVisits=latestByHN(monthVisits),doneKeys=new Set(completedVisits.map(patientQueueKey));
     const masters=records.filter(r=>r._sheet==="รวม");
     $("#pendingCount").textContent=masters.filter(r=>!doneKeys.has(patientQueueKey(r))).length.toLocaleString("th-TH");
-    $("#doneCount").textContent=dayVisits.length.toLocaleString("th-TH");
+    $("#doneCount").textContent=completedVisits.length.toLocaleString("th-TH");
     document.querySelectorAll(".queue-tab").forEach(btn=>btn.classList.toggle("active",btn.dataset.queue===queueMode));
-    $("#queueHint").textContent=queueMode==="pending"?"รายชื่อที่ยังไม่ได้บันทึกในวันที่เลือก":queueMode==="done"?"กดชื่อเพื่อแก้ไข Visit ที่บันทึกแล้ว":"แสดงข้อมูลทั้งหมด";
-    const source=queueMode==="pending"?masters.filter(r=>!doneKeys.has(patientQueueKey(r))):queueMode==="done"?dayVisits:records;
+    $("#queueHint").textContent=queueMode==="pending"?`รายชื่อที่ยังไม่มีผลบันทึกในเดือน ${monthLabel(queueMonth)}`:queueMode==="done"?`ผู้ป่วยที่บันทึกแล้วในเดือน ${monthLabel(queueMonth)} · แสดงผลล่าสุดรายละ 1 รายการ`:"แสดงข้อมูลทั้งหมด";
+    const source=queueMode==="pending"?masters.filter(r=>!doneKeys.has(patientQueueKey(r))):queueMode==="done"?completedVisits:records;
     filtered=source.filter(r=>{
       const hay=[r.hn,r.firstName,r.lastName,r.houseNo,r.village].join(" ").toLowerCase();
       const monthOK=queueMode!=="all"||!m||String(r._sheet||"")===m;
