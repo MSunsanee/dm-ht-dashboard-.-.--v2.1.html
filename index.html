@@ -455,6 +455,9 @@
   const storageRemove = key => { try{sessionStorage.removeItem(key)}catch{} };
   const preferenceGet = key => { try{return localStorage.getItem(key)||""}catch{return ""} };
   const preferenceSet = (key,value) => { try{localStorage.setItem(key,value)}catch{} };
+  const PUBLIC_SUMMARY_CACHE="dmht_public_summary_v1";
+  function cachedPublicSummary(){try{const saved=JSON.parse(preferenceGet(PUBLIC_SUMMARY_CACHE)||"null");return saved&&saved.summary? saved.summary:null}catch{return null}}
+  function showCachedPublicSummary(){const summary=cachedPublicSummary();if(!summary)return false;publicSummary=summary;renderSummary(summary);renderPublicPresentation(summary);setStatus("","แสดงข้อมูลล่าสุดที่บันทึกไว้ · กำลังอัปเดต");return true}
   const esc = (v) => String(v ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[c]));
   const isYes = (v) => ["✓","1","true","yes","y","dm","ht","เป็น"].includes(String(v ?? "").trim().toLowerCase());
   const fmt = (v) => (v === null || v === undefined || v === "") ? "–" : esc(v);
@@ -642,10 +645,11 @@
   function setBusy(on) { document.body.classList.toggle("syncing",on);$("#refreshBtn").disabled=on }
 
   async function loadPublicSummary() {
+    if(!Object.keys(publicSummary||{}).length)showCachedPublicSummary();
     setStatus("","กำลังโหลดภาพรวม");
     try{
       const result=await api("summary");
-      publicSummary=result.summary||{};renderSummary(publicSummary);renderPublicPresentation(publicSummary);
+      publicSummary=result.summary||{};preferenceSet(PUBLIC_SUMMARY_CACHE,JSON.stringify({savedAt:Date.now(),summary:publicSummary}));renderSummary(publicSummary);renderPublicPresentation(publicSummary);
       if(Number(result.apiVersion||0)<REQUIRED_API_VERSION){setStatus("bad","ต้อง Deploy GAS เวอร์ชันใหม่");toast("GAS ที่ใช้อยู่เป็นเวอร์ชันเก่า จึงยังบันทึก visit และกู้ทะเบียน 131 คนไม่ได้",true)}
       else setStatus("ok","ข้อมูลภาพรวมล่าสุด");
     }catch(err){
@@ -705,7 +709,8 @@
       const masterCount=records.filter(r=>r._sheet==="รวม").length;
       const patientCount=masterCount||new Set(records.map(patientQueueKey).filter(k=>k!=="||")).size;
       setStatus("ok", `เข้าสู่ระบบแล้ว · ${patientCount} ราย`);
-      buildFilters();if(auth?.role==="village")$("#monthFilter").value="รวม";applyFilters();buildReferralMonths();renderReferrals();buildManagementFilters();renderManagementReport();buildMonthlyRegistryFilters();renderMonthlyRegistry();
+      buildFilters();if(auth?.role==="village")$("#monthFilter").value="รวม";applyFilters();buildReferralMonths();renderReferrals();buildManagementFilters();buildMonthlyRegistryFilters();
+      if(!$("#reportsSection").hidden){renderManagementReport();renderMonthlyRegistry()}
       if(showToast) toast("อัปเดตข้อมูลล่าสุดแล้ว");
     } catch(err) {
       if(!records.length){filtered=[];renderTable();updateDashboard([])}
@@ -1188,6 +1193,7 @@ ${worksheet("สรุปค่าน้ำตาล",summaryTable("sugar"))}${w
   async function restoreSession() {
     const token=storageGet("dmht_token");
     if(!token){showLoggedOut();return}
+    showCachedPublicSummary();
     try{
       auth={token};const result=await api("session");
       setAuthenticated(result.user,token);
