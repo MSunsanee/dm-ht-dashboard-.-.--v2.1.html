@@ -145,8 +145,8 @@
       .color-patients-table td::before{content:none!important}
       .color-patients-table .level{padding:3px 4px;font-size:9px;white-space:normal}
     }
-  body.public-mode #patientToolbar,body.public-mode #visitQueue,body.public-mode #dataCard thead,body.public-mode #dataCard .pagination,body.public-mode #referralCard .toolbar select,body.public-mode #referralCard .toolbar button,body.public-mode #referralCard thead,body.public-mode #managementReport,body.public-mode #monthlyRegistryReport,body.public-mode #reportGrid,body.public-mode #printManagementBtn{display:none!important}
-  body.public-mode #dataCard,body.public-mode #referralCard{cursor:default}body.public-mode #tableBody td{display:block!important}body.public-mode #tableBody tr{padding:0!important;border:0!important}
+  body.public-mode #patientToolbar,body.public-mode #visitQueue,body.public-mode #dataCard thead,body.public-mode #dataCard .pagination,body.public-mode #referralCard .toolbar select,body.public-mode #referralCard .toolbar button,body.public-mode #referralCard thead,body.public-mode #monthlyRegistryReport,body.public-mode #reportGrid,body.public-mode #printManagementBtn,body.public-mode #mgPriorityBox,body.public-mode .print-signatures,body.public-mode .print-page-note{display:none!important}
+  body.public-mode #dataCard,body.public-mode #referralCard{cursor:default}body.public-mode #tableBody td{display:block!important}body.public-mode #tableBody tr{padding:0!important;border:0!important}body.public-mode .analysis-box:has(#mgPriorityBody){display:none!important}
   .public-measurements{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:12px;padding:18px}
   .public-measurement{border:1px solid var(--line);border-radius:16px;padding:16px;background:#fff;display:grid;grid-template-columns:1fr 1fr;gap:10px}
   .public-measurement strong{display:block;font-size:23px;margin-top:4px}.public-pdpa{padding:18px;border-left:5px solid var(--primary);background:#eef9f7;border-radius:14px;margin:16px}
@@ -441,7 +441,7 @@
 
 <script>
   const GAS_URL = "https://script.google.com/macros/s/AKfycbx9y2f2fVFf2dGYV1LDuC9xISrqghO0vDg0PZjLE5ILkN0Nxf6utz3gAKCqqkIdoMt2/exec";
-  const REQUIRED_API_VERSION = 13;
+  const REQUIRED_API_VERSION = 14;
   const PAGE_SIZE = 20;
   const fields = ["recordDate","hn","firstName","lastName","birthDate","age","phone","houseNo","village","weight","height","waist","bp1","bp2","pulse","bloodSugar","appointmentDate","medicationAt","dm","ht","oldCva","hyperlipidaemia","ckdStage"];
   let records = [], filtered = [], dashboardData = [], referrals = [], currentMonthlySugar = [], currentMonthlyBP = [], publicSummary = {}, page = 1, editing = null, deleting = null, auth = null, formMode = "basic", loadPromise = null, queueMode = "all";
@@ -472,8 +472,8 @@
     const role=profile?.role||"";
     if(!role){
       $("#referralNav").style.display="flex";$("#reportsNav").style.display="flex";
-      $("#reportGrid").style.display="none";$("#managementReport").style.display="none";$("#monthlyRegistryReport").style.display="none";$("#printManagementBtn").style.display="none";
-      $("#reportReadOnlyNote").style.display="block";
+      $("#reportGrid").style.display="none";$("#managementReport").style.display="block";$("#monthlyRegistryReport").style.display="none";$("#printManagementBtn").style.display="none";
+      $("#reportReadOnlyNote").style.display="none";
       return;
     }
     $("#referralNav").style.display=["admin","viewer","staff","demo"].includes(role)?"flex":"none";
@@ -648,6 +648,14 @@
     $("#reportReadOnlyNote").innerHTML=`<div class="public-pdpa"><strong>รายงานภาพรวมสำหรับนำเสนอ · ${esc(month)}</strong><br>ผู้ป่วยทั้งหมด ${Number(s.total||0).toLocaleString("th-TH")} ราย · DM ${Number(s.dm||0).toLocaleString("th-TH")} · HT ${Number(s.ht||0).toLocaleString("th-TH")} · DM และ HT ${Number(s.both||0).toLocaleString("th-TH")}<br><br><strong>ค่าน้ำตาล:</strong> เขียว ${Number(sugar.green||0)} · เหลือง ${Number(sugar.yellow||0)} · ส้ม ${Number(sugar.orange||0)} · แดง ${Number(sugar.red||0)}<br><strong>ความดัน:</strong> เขียว ${Number(bp.green||0)} · เหลือง ${Number(bp.yellow||0)} · ส้ม ${Number(bp.orange||0)} · แดง ${Number(bp.red||0)}<br><br>รายงานสาธารณะเป็นแบบอ่านอย่างเดียวและไม่แสดงข้อมูลส่วนบุคคล</div>`;
   }
 
+  function renderPublicManagementReport(s){
+    const r=s.publicReport||{},d=r.diseases||{},ref=s.publicReferrals||{},scope=s.summaryMonth?monthLabel(s.summaryMonth):"เดือนล่าสุด";
+    $("#mgPatients").textContent=Number(r.patients||0).toLocaleString("th-TH");$("#mgVisits").textContent=`${Number(r.visits||0).toLocaleString("th-TH")} ครั้งตรวจ`;$("#mgControlledDM").textContent=Number(r.dmControl||0)+"%";$("#mgControlledHT").textContent=Number(r.htControl||0)+"%";$("#mgRed").textContent=Number(r.red||0);$("#mgComplete").textContent=Number(r.completePercent||0)+"%";$("#mgComorbid").textContent=Number(r.comorbid||0);$("#mgElderly").textContent=Number(r.elderly||0);$("#mgOverdue").textContent="–";$("#mgReferrals").textContent=Number(ref.sent||0);$("#mgReferralCurrent").textContent=`กำลังส่งต่อ ${Number(ref.current||0)} ราย`;$("#mgPrintScope").textContent=`${scope} · ทุกหมู่บ้าน`;$("#mgPrintDate").textContent="โหมดนำเสนอแบบไม่ระบุตัวบุคคล";
+    $("#mgExecutiveSummary").innerHTML=`<p><strong>ภาพรวม ${esc(scope)}</strong> มีผู้ป่วยที่มีผลตรวจล่าสุด ${Number(r.patients||0)} ราย ควบคุมโรค DM ได้ร้อยละ ${Number(r.dmControl||0)} และควบคุมโรค HT ได้ร้อยละ ${Number(r.htControl||0)} พบกลุ่มเร่งด่วนสีแดง ${Number(r.red||0)} ราย คิดเป็นร้อยละ ${Number(r.redPercent||0)}</p><p>ข้อมูลนี้เป็นสถิติรวมสำหรับการนำเสนอ ไม่แสดงข้อมูลที่ระบุตัวผู้ป่วย</p><div class="executive-points"><div class="executive-point"><span>ผลตรวจในเดือน</span><strong>${Number(r.visits||0)} ครั้ง</strong></div><div class="executive-point"><span>ควบคุม DM ได้</span><strong>${Number(r.dmControl||0)}%</strong></div><div class="executive-point"><span>ควบคุม HT ได้</span><strong>${Number(r.htControl||0)}%</strong></div><div class="executive-point"><span>กลุ่มเร่งด่วนสีแดง</span><strong>${Number(r.red||0)} ราย (${Number(r.redPercent||0)}%)</strong></div><div class="executive-point"><span>ข้อมูลสำคัญครบถ้วน</span><strong>${Number(r.completePercent||0)}%</strong></div></div>`;
+    const trend=(s.monthlySugar||[]).map(x=>({label:`${monthLabel(x.month)} · แดง ${Number(x.levels?.red||0)}`,value:Object.values(x.levels||{}).reduce((a,b)=>a+Number(b||0),0),color:Number(x.levels?.red||0)?"#d97706":"#0f766e"}));renderMiniBars("#mgTrend",trend.slice(-6));renderMiniBars("#mgVillages",(r.villages||[]).map(x=>({label:`หมู่ ${x.village} · แดง ${x.red}`,value:x.total,color:x.red?"#d97706":"#0f766e"})));renderMiniBars("#mgDiseases",[{label:"DM",value:d.dm||0},{label:"HT",value:d.ht||0},{label:"Old CVA",value:d.oldCva||0},{label:"Hyperlipidaemia",value:d.hyperlipidaemia||0},{label:"CKD 3–5",value:d.ckd35||0}]);
+    const recs=[];if(Number(r.red||0))recs.push({c:"urgent",t:`เร่งติดตามกลุ่มสีแดง ${r.red} ราย พิจารณาประเมินซ้ำและส่งต่อตามข้อบ่งชี้`});if(Number(r.dmControl||0)<70)recs.push({c:"warn",t:`การควบคุม DM ได้ ${r.dmControl||0}% ควรทบทวนแผนยา อาหาร และการติดตาม`});if(Number(r.htControl||0)<70)recs.push({c:"warn",t:`การควบคุม HT ได้ ${r.htControl||0}% ควรทบทวนการใช้ยาและพฤติกรรมสุขภาพ`});if(Number(r.completePercent||0)<90)recs.push({c:"",t:`ข้อมูลสำคัญครบถ้วน ${r.completePercent||0}% ควรเร่งปรับปรุงความครบถ้วนของการบันทึก`});$("#mgRecommendations").innerHTML=recs.map(x=>`<div class="recommendation ${x.c}">${esc(x.t)}</div>`).join("");
+  }
+
   function renderSummary(s) {
     if(!auth) dashboardData=[];
     $("#kpiTotal").textContent=Number(s.total||0).toLocaleString("th-TH");
@@ -662,7 +670,7 @@
     const publicScope=s.summaryMonth?`ข้อมูลภาพรวมเดือน ${monthLabel(s.summaryMonth)} · ไม่แสดงข้อมูลส่วนบุคคล`:"ข้อมูลภาพรวมเบื้องต้น · ไม่แสดงข้อมูลส่วนบุคคล";
     $("#sugarDonutSub").textContent=publicScope;$("#bpDonutSub").textContent=publicScope;
     renderColorPanels(s.sugarLevels||{},s.bpLevels||{});
-    currentMonthlySugar=Array.isArray(s.monthlySugar)?s.monthlySugar:[];currentMonthlyBP=Array.isArray(s.monthlyBP)?s.monthlyBP:[];renderDonutCharts(s.sugarLevels||{},s.bpLevels||{});renderMonthlySugarChart();
+    currentMonthlySugar=Array.isArray(s.monthlySugar)?s.monthlySugar:[];currentMonthlyBP=Array.isArray(s.monthlyBP)?s.monthlyBP:[];renderDonutCharts(s.sugarLevels||{},s.bpLevels||{});renderMonthlySugarChart();if(!auth)renderPublicManagementReport(s);
   }
 
   async function loadData(showToast=false) {
