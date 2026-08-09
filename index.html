@@ -257,7 +257,7 @@
       <div class="table-wrap">
         <table>
           <thead><tr>
-            <th>ลำดับ</th><th>วันที่ลงข้อมูล</th><th>HN</th><th>ชื่อ–สกุล</th><th>วันเกิด</th><th>อายุ</th><th>เบอร์โทรศัพท์</th><th>ที่อยู่</th><th>นน./สส.</th>
+            <th>ลำดับ</th><th>วันที่ลงข้อมูล</th><th>HN</th><th>ชื่อ–สกุล</th><th>วันเกิด</th><th>อายุ</th><th>เบอร์โทรศัพท์</th><th>ที่อยู่</th><th>นน./สส.</th><th>BMI</th>
             <th>ความดัน</th><th>น้ำตาล</th><th>นัดรับยา</th><th>รับยาที่</th><th>โรค</th><th>สถานะส่งต่อ</th><th class="visit-files-col">ประวัติการรักษา</th><th>จัดการ</th>
           </tr></thead>
           <tbody id="tableBody"><tr><td><div class="login-note"><div class="lock">🔒</div><strong>เข้าสู่ระบบเพื่อดูรายชื่อผู้ป่วย</strong><div class="panel-sub">หน้าหลักแสดงเฉพาะข้อมูลภาพรวมที่ไม่ระบุตัวบุคคล</div></div></td></tr></tbody>
@@ -305,7 +305,7 @@
       <div class="analysis-box" id="monthlyRegistryReport" style="margin-top:16px">
         <div class="management-head"><div><h3 style="margin:0 0 4px">ทะเบียนผู้ป่วยรายหมู่ประจำเดือน</h3><div class="panel-sub">แสดงผู้ป่วยทุกคนในหมู่ที่เลือก พร้อมผลการบันทึกและผู้ที่ยังไม่ได้รับการบันทึกในเดือนนั้น</div></div><div class="management-filters"><select id="registryMonth" aria-label="เลือกเดือนรายงาน"><option value="">เลือกเดือน</option></select><select id="registryVillage" aria-label="เลือกหมู่บ้าน"><option value="">ทุกหมู่บ้าน</option></select><button class="btn btn-soft" id="downloadRegistryBtn">⇩ ดาวน์โหลดทะเบียน</button></div></div>
         <div class="panel-sub" id="registrySummary" style="margin-bottom:10px"></div>
-        <div class="table-wrap monthly-registry-wrap" style="max-height:520px"><table class="monthly-registry-table"><thead><tr><th>ลำดับ</th><th>หมู่</th><th>HN</th><th>ชื่อ–สกุล</th><th>วันที่บันทึก</th><th>น้ำหนัก</th><th>ส่วนสูง</th><th>รอบเอว</th><th>ความดัน</th><th>ชีพจร</th><th>น้ำตาล</th><th>วันนัด</th><th>ผลการลงบันทึก</th></tr></thead><tbody id="monthlyRegistryBody"></tbody></table></div>
+        <div class="table-wrap monthly-registry-wrap" style="max-height:520px"><table class="monthly-registry-table"><thead><tr><th>ลำดับ</th><th>หมู่</th><th>HN</th><th>ชื่อ–สกุล</th><th>วันที่บันทึก</th><th>น้ำหนัก</th><th>ส่วนสูง</th><th>BMI</th><th>รอบเอว</th><th>ความดัน</th><th>ชีพจร</th><th>น้ำตาล</th><th>วันนัด</th><th>ผลการลงบันทึก</th></tr></thead><tbody id="monthlyRegistryBody"></tbody></table></div>
       </div>
       <div class="section-title" style="margin-top:24px">ดาวน์โหลดรายงาน</div>
       <div class="report-grid" id="reportGrid">
@@ -384,6 +384,7 @@
       <div class="form-grid">
         <div class="field"><label>น้ำหนัก (กก.) <span class="required-star">*</span></label><input name="weight" type="number" step="0.1" min="0" required></div>
         <div class="field"><label>ส่วนสูง (ซม.) <span class="required-star">*</span></label><input name="height" type="number" step="0.1" min="0" required></div>
+        <div class="field"><label>BMI (คำนวณอัตโนมัติ)</label><input id="bmiDisplay" readonly placeholder="–"></div>
         <div class="field"><label>รอบเอว (ซม.) <span class="required-star">*</span></label><input name="waist" type="number" step="0.1" min="0" required></div>
         <div class="field"><label>ชีพจร (ครั้ง/นาที) <span class="required-star">*</span></label><input name="pulse" type="number" min="0" required></div>
         <div class="field"><label>ความดัน ครั้งที่ 1 <span class="required-star">*</span></label><div class="bp-input-wrap"><input name="bp1" inputmode="numeric" autocomplete="off" placeholder="เช่น 138/82" enterkeyhint="next" pattern="[0-9]{2,3}\s*/\s*[0-9]{2,3}" title="กรอกในรูปแบบ 138/82" required><button class="bp-slash-btn" type="button" data-bp-slash="bp1" aria-label="ใส่เครื่องหมายทับในค่าความดัน">/</button></div></div>
@@ -602,6 +603,11 @@
     if(ref.getMonth()<birth.getMonth()||(ref.getMonth()===birth.getMonth()&&ref.getDate()<birth.getDate())) age--;
     return age>=0?age:"";
   };
+  const calculateBMI = (weight,height) => {
+    const w=Number(weight),h=Number(height)/100;
+    return Number.isFinite(w)&&Number.isFinite(h)&&w>0&&h>0?(w/(h*h)).toFixed(1):"";
+  };
+  function updateBMIField(){const f=$("#patientForm");$("#bmiDisplay").value=calculateBMI(f.elements.weight.value,f.elements.height.value)}
 
   async function apiOnce(action, payload={}) {
     const token=auth?.token||storageGet("dmht_token");
@@ -762,13 +768,13 @@
         <td class="muted">${start+i+1}</td><td>${formatThaiDate(r.recordDate)}</td><td><strong>${fmt(r.hn)}</strong></td>
         <td class="name">${auth?.role!=="viewer"&&(r._sheet==="รวม"||!["staff","demo"].includes(auth?.role))?`<button class="patient-link" onclick="${r._sheet==="รวม"?"openVisit":"openEdit"}('${esc(r._sheet)}',${Number(r._row)})">${fmt(r.firstName)} ${fmt(r.lastName)}</button>`:`${fmt(r.firstName)} ${fmt(r.lastName)}`}</td><td>${r.birthDate?esc(birthDateBE(r.birthDate)):"–"}</td><td>${fmt(r.age)}</td><td>${fmt(r.phone)}</td>
         <td>${r.houseNo?`เลขที่ ${esc(r.houseNo)}`:"–"} ${r.village?`หมู่ ${esc(r.village)}`:""}</td>
-        <td>${fmt(r.weight)} / ${fmt(r.height)}</td><td>${r.bp1?levelBadge(bpLevel(r.bp1),r.bp1):"–"}${r.bp2?` ${levelBadge(bpLevel(r.bp2),r.bp2)}`:""}</td>
+        <td>${fmt(r.weight)} / ${fmt(r.height)}</td><td><strong>${calculateBMI(r.weight,r.height)||"–"}</strong></td><td>${r.bp1?levelBadge(bpLevel(r.bp1),r.bp1):"–"}${r.bp2?` ${levelBadge(bpLevel(r.bp2),r.bp2)}`:""}</td>
         <td>${r.bloodSugar!==""&&r.bloodSugar!=null?levelBadge(sugarLevel(r.bloodSugar),r.bloodSugar):"–"}</td><td>${formatThaiDate(r.appointmentDate)}</td><td>${fmt(r.medicationAt)}</td>
         <td>${conditionBadges(r)}</td><td>${referralStatus.has(String(r.hn))?`<span class="badge ${referralStatus.get(String(r.hn)).type==="ส่งต่อ"?"ht":"dm"}">${esc(referralStatus.get(String(r.hn)).type)}</span>`:'<span class="badge none">รับยาตามปกติ</span>'}</td>
         <td class="visit-files-col">${parseAttachments(r.attachments).length?`<button class="btn btn-soft" onclick="showVisitFiles('${esc(r._sheet)}',${Number(r._row)})">📎 ${parseAttachments(r.attachments).length} ไฟล์</button>`:'<span class="muted">ไม่มีไฟล์</span>'}</td>
         <td><div class="actions">${auth?.role==="admin"?`<button class="icon-btn" title="ส่งต่อ–รับกลับ" onclick="openReferral('${esc(r.hn)}')">⇄</button>`:""}${!["viewer","staff","demo"].includes(auth?.role)?`<button class="icon-btn" title="แก้ไข" onclick="openEdit('${esc(r._sheet)}',${Number(r._row)})">✎</button>`:""}
         ${auth?.role==="admin"?`<button class="icon-btn" title="ลบ" onclick="openDelete('${esc(r._sheet)}',${Number(r._row)})">⌫</button>`:""}</div></td>
-      </tr>`).join("") : '<tr><td colspan="17"><div class="empty"><div class="big">⌕</div>ไม่พบข้อมูลที่ตรงกับเงื่อนไข</div></td></tr>';
+      </tr>`).join("") : '<tr><td colspan="18"><div class="empty"><div class="big">⌕</div>ไม่พบข้อมูลที่ตรงกับเงื่อนไข</div></td></tr>';
     $("#resultText").textContent=`พบ ${filtered.length.toLocaleString("th-TH")} รายการ${filtered.length?` · แสดง ${start+1}–${Math.min(start+PAGE_SIZE,filtered.length)}`:""}`;
     $("#pageText").textContent=`หน้า ${page} / ${pages}`;
     $("#prevBtn").disabled=page<=1; $("#nextBtn").disabled=page>=pages;
@@ -932,18 +938,18 @@
     if(!["admin","staff","demo"].includes(auth?.role))return;
     const rows=monthlyRegistryRows(),recorded=rows.filter(x=>x.visit).length,month=$("#registryMonth").value,village=$("#registryVillage").value;
     $("#registrySummary").textContent=`${monthLabel(month)} · ${village?`หมู่ ${village}`:"ทุกหมู่บ้าน"} · ผู้ป่วย ${rows.length} คน · บันทึกแล้ว ${recorded} คน · ยังไม่บันทึก ${rows.length-recorded} คน`;
-    $("#monthlyRegistryBody").innerHTML=rows.length?rows.map((x,i)=>{const p=x.patient,v=x.visit;return `<tr><td>${i+1}</td><td>${fmt(p.village)}</td><td><strong>${fmt(p.hn)}</strong></td><td class="name">${fmt(p.firstName)} ${fmt(p.lastName)}</td><td>${v?formatThaiDate(v.recordDate):"–"}</td><td>${v?fmt(v.weight):"–"}</td><td>${v?fmt(v.height):"–"}</td><td>${v?fmt(v.waist):"–"}</td><td>${v?fmt(v.bp2||v.bp1):"–"}</td><td>${v?fmt(v.pulse):"–"}</td><td>${v?fmt(v.bloodSugar):"–"}</td><td>${v?formatThaiDate(v.appointmentDate):"–"}</td><td><span class="recorded-badge${v?"":" missing"}">${v?"บันทึกแล้ว":"ยังไม่บันทึก"}</span></td></tr>`}).join(""):'<tr><td colspan="13"><div class="empty">ไม่พบผู้ป่วยในหมู่ที่เลือก</div></td></tr>';
+    $("#monthlyRegistryBody").innerHTML=rows.length?rows.map((x,i)=>{const p=x.patient,v=x.visit;return `<tr><td>${i+1}</td><td>${fmt(p.village)}</td><td><strong>${fmt(p.hn)}</strong></td><td class="name">${fmt(p.firstName)} ${fmt(p.lastName)}</td><td>${v?formatThaiDate(v.recordDate):"–"}</td><td>${v?fmt(v.weight):"–"}</td><td>${v?fmt(v.height):"–"}</td><td>${v?(calculateBMI(v.weight,v.height)||"–"):"–"}</td><td>${v?fmt(v.waist):"–"}</td><td>${v?fmt(v.bp2||v.bp1):"–"}</td><td>${v?fmt(v.pulse):"–"}</td><td>${v?fmt(v.bloodSugar):"–"}</td><td>${v?formatThaiDate(v.appointmentDate):"–"}</td><td><span class="recorded-badge${v?"":" missing"}">${v?"บันทึกแล้ว":"ยังไม่บันทึก"}</span></td></tr>`}).join(""):'<tr><td colspan="14"><div class="empty">ไม่พบผู้ป่วยในหมู่ที่เลือก</div></td></tr>';
   }
   function downloadMonthlyRegistryExcel(){
     if(!["admin","demo"].includes(auth?.role)){toast("บัญชีนี้ไม่มีสิทธิ์ดาวน์โหลดรายงาน",true);return}
     const rows=monthlyRegistryRows(),month=$("#registryMonth").value,village=$("#registryVillage").value;
     if(!rows.length){toast("ไม่มีข้อมูลสำหรับดาวน์โหลด",true);return}
     const xe=v=>String(v??"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
-    const headers=["ลำดับ","เดือน","หมู่","HN","ชื่อ","สกุล","วันเกิด (พ.ศ.)","เบอร์โทร","วันที่บันทึก","น้ำหนัก","ส่วนสูง","รอบเอว","ความดันครั้งที่ 1","ความดันครั้งที่ 2","ชีพจร","น้ำตาล","ระดับน้ำตาล","ระดับความดัน","วันนัดครั้งต่อไป","ผลการลงบันทึก"];
+    const headers=["ลำดับ","เดือน","หมู่","HN","ชื่อ","สกุล","วันเกิด (พ.ศ.)","เบอร์โทร","วันที่บันทึก","น้ำหนัก","ส่วนสูง","BMI","รอบเอว","ความดันครั้งที่ 1","ความดันครั้งที่ 2","ชีพจร","น้ำตาล","ระดับน้ำตาล","ระดับความดัน","วันนัดครั้งต่อไป","ผลการลงบันทึก"];
     const levelStyle=level=>({green:"Green",yellow:"Yellow",orange:"Orange",red:"Red"}[level]||"");
     const cell=(value,style="")=>`<Cell${style?` ss:StyleID="${style}"`:""}><Data ss:Type="String">${xe(value)}</Data></Cell>`;
-    const detailRows=rows.map((x,i)=>{const p=x.patient,v=x.visit,sStyle=v?levelStyle(sugarLevel(v.bloodSugar)):"",bStyle=v?levelStyle(bpLevel(v.bp2||v.bp1)):"",values=[i+1,monthLabel(month),p.village,p.hn,p.firstName,p.lastName,birthDateBE(p.birthDate),p.phone,v?formatThaiDate(v.recordDate):"",v?.weight||"",v?.height||"",v?.waist||"",v?.bp1||"",v?.bp2||"",v?.pulse||"",v?.bloodSugar||"",v?levelMeta[sugarLevel(v.bloodSugar)].label:"",v?levelMeta[bpLevel(v.bp2||v.bp1)].label:"",v?formatThaiDate(v.appointmentDate):"",v?"บันทึกแล้ว":"ยังไม่บันทึก"],styles=values.map(()=>"");styles[12]=bStyle;styles[13]=bStyle;styles[15]=sStyle;styles[16]=sStyle;styles[17]=bStyle;styles[19]=v?"Recorded":"Missing";return `<Row ss:AutoFitHeight="1">${values.map((value,j)=>cell(value,styles[j])).join("")}</Row>`}).join("");
-    const widths=[34,78,38,62,92,92,82,82,78,48,48,48,75,75,48,56,64,66,82,76];
+    const detailRows=rows.map((x,i)=>{const p=x.patient,v=x.visit,sStyle=v?levelStyle(sugarLevel(v.bloodSugar)):"",bStyle=v?levelStyle(bpLevel(v.bp2||v.bp1)):"",values=[i+1,monthLabel(month),p.village,p.hn,p.firstName,p.lastName,birthDateBE(p.birthDate),p.phone,v?formatThaiDate(v.recordDate):"",v?.weight||"",v?.height||"",v?calculateBMI(v.weight,v.height):"",v?.waist||"",v?.bp1||"",v?.bp2||"",v?.pulse||"",v?.bloodSugar||"",v?levelMeta[sugarLevel(v.bloodSugar)].label:"",v?levelMeta[bpLevel(v.bp2||v.bp1)].label:"",v?formatThaiDate(v.appointmentDate):"",v?"บันทึกแล้ว":"ยังไม่บันทึก"],styles=values.map(()=>"");styles[13]=bStyle;styles[14]=bStyle;styles[16]=sStyle;styles[17]=sStyle;styles[18]=bStyle;styles[20]=v?"Recorded":"Missing";return `<Row ss:AutoFitHeight="1">${values.map((value,j)=>cell(value,styles[j])).join("")}</Row>`}).join("");
+    const widths=[34,78,38,62,92,92,82,82,78,48,48,48,48,75,75,48,56,64,66,82,76];
     const styles=`<Styles><Style ss:ID="Default"><Font ss:FontName="TH SarabunPSK" ss:Size="15"/><Alignment ss:Vertical="Center" ss:WrapText="1"/><Borders><Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#D7E4E1"/><Border ss:Position="Left" ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#D7E4E1"/><Border ss:Position="Right" ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#D7E4E1"/><Border ss:Position="Top" ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#D7E4E1"/></Borders></Style><Style ss:ID="Title"><Font ss:FontName="TH SarabunPSK" ss:Size="18" ss:Bold="1" ss:Color="#FFFFFF"/><Interior ss:Color="#0F766E" ss:Pattern="Solid"/><Alignment ss:Horizontal="Center" ss:Vertical="Center"/></Style><Style ss:ID="Summary"><Font ss:FontName="TH SarabunPSK" ss:Size="15" ss:Bold="1"/><Interior ss:Color="#E8F5F2" ss:Pattern="Solid"/><Alignment ss:Horizontal="Left"/></Style><Style ss:ID="Header"><Font ss:FontName="TH SarabunPSK" ss:Size="15" ss:Bold="1" ss:Color="#FFFFFF"/><Interior ss:Color="#0F766E" ss:Pattern="Solid"/><Alignment ss:Horizontal="Center" ss:Vertical="Center" ss:WrapText="1"/></Style><Style ss:ID="Green"><Interior ss:Color="#DCFCE7" ss:Pattern="Solid"/><Font ss:FontName="TH SarabunPSK" ss:Size="15" ss:Color="#166534" ss:Bold="1"/></Style><Style ss:ID="Yellow"><Interior ss:Color="#FEF9C3" ss:Pattern="Solid"/><Font ss:FontName="TH SarabunPSK" ss:Size="15" ss:Color="#854D0E" ss:Bold="1"/></Style><Style ss:ID="Orange"><Interior ss:Color="#FFEDD5" ss:Pattern="Solid"/><Font ss:FontName="TH SarabunPSK" ss:Size="15" ss:Color="#9A3412" ss:Bold="1"/></Style><Style ss:ID="Red"><Interior ss:Color="#FEE2E2" ss:Pattern="Solid"/><Font ss:FontName="TH SarabunPSK" ss:Size="15" ss:Color="#991B1B" ss:Bold="1"/></Style><Style ss:ID="Recorded"><Interior ss:Color="#DCFCE7" ss:Pattern="Solid"/><Font ss:FontName="TH SarabunPSK" ss:Size="15" ss:Color="#166534" ss:Bold="1"/></Style><Style ss:ID="Missing"><Interior ss:Color="#FEE2E2" ss:Pattern="Solid"/><Font ss:FontName="TH SarabunPSK" ss:Size="15" ss:Color="#991B1B" ss:Bold="1"/></Style></Styles>`;
     const recorded=rows.filter(x=>x.visit).length,summary=`${monthLabel(month)} · ${village?`หมู่ ${village}`:"ทุกหมู่บ้าน"} · ผู้ป่วย ${rows.length} คน · บันทึกแล้ว ${recorded} คน · ยังไม่บันทึก ${rows.length-recorded} คน`;
     const xml=`<?xml version="1.0" encoding="UTF-8"?><?mso-application progid="Excel.Sheet"?><Workbook xmlns="urn:schemas-microsoft-com:office:spreadsheet" xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns:ss="urn:schemas-microsoft-com:office:spreadsheet">${styles}<Worksheet ss:Name="ทะเบียนรายเดือน"><Table>${widths.map(w=>`<Column ss:AutoFitWidth="0" ss:Width="${w}"/>`).join("")}<Row ss:Height="30"><Cell ss:MergeAcross="19" ss:StyleID="Title"><Data ss:Type="String">ทะเบียนผู้ป่วยรายหมู่ประจำเดือน</Data></Cell></Row><Row ss:Height="24"><Cell ss:MergeAcross="19" ss:StyleID="Summary"><Data ss:Type="String">${xe(summary)}</Data></Cell></Row><Row ss:Height="34">${headers.map(h=>cell(h,"Header")).join("")}</Row>${detailRows}</Table><WorksheetOptions xmlns="urn:schemas-microsoft-com:office:excel"><PageSetup><Layout x:Orientation="Landscape"/><Header x:Margin="0.2"/><Footer x:Margin="0.2"/><PageMargins x:Bottom="0.35" x:Left="0.25" x:Right="0.25" x:Top="0.35"/></PageSetup><FitToPage/><Print><ValidPrinterInfo/><PaperSizeIndex>9</PaperSizeIndex><FitWidth>1</FitWidth><FitHeight>0</FitHeight><HorizontalResolution>600</HorizontalResolution><VerticalResolution>600</VerticalResolution></Print><FreezePanes/><FrozenNoSplit/><SplitHorizontal>3</SplitHorizontal><TopRowBottomPane>3</TopRowBottomPane><ProtectObjects>False</ProtectObjects><ProtectScenarios>False</ProtectScenarios></WorksheetOptions></Worksheet></Workbook>`;
@@ -956,7 +962,7 @@
       ["ลำดับ",(_,i)=>i+1],["วันที่ลงข้อมูล",r=>r.recordDate],["HN",r=>r.hn],
       ["ชื่อ",r=>r.firstName],["สกุล",r=>r.lastName],["วันเดือนปีเกิด (พ.ศ.)",r=>birthDateBE(r.birthDate)],
       ["อายุ",r=>r.age],["เบอร์โทรศัพท์",r=>r.phone],["บ้านเลขที่",r=>r.houseNo],
-      ["หมู่",r=>r.village],["น้ำหนัก",r=>r.weight],["ส่วนสูง",r=>r.height],
+      ["หมู่",r=>r.village],["น้ำหนัก",r=>r.weight],["ส่วนสูง",r=>r.height],["BMI",r=>calculateBMI(r.weight,r.height)],
       ["รอบเอว",r=>r.waist],["ความดันครั้งที่ 1",r=>r.bp1],["ความดันครั้งที่ 2",r=>r.bp2],
       ["ชีพจร",r=>r.pulse],["น้ำตาล",r=>r.bloodSugar],["นัดรับยาวันที่",r=>r.appointmentDate],
       ["รับยาที่",r=>r.medicationAt],["DM",r=>r.dm],["HT",r=>r.ht],["Old CVA",r=>r.oldCva],
@@ -1114,6 +1120,7 @@ ${worksheet("สรุปค่าน้ำตาล",summaryTable("sugar"))}${w
     if(record?.appointmentDate) {
       const d=new Date(record.appointmentDate); if(!Number.isNaN(d.getTime())) f.elements.appointmentDate.value=d.toISOString().slice(0,10);
     }
+    updateBMIField();
     const requiredVisit=["recordDate","weight","height","waist","bp1","pulse","bloodSugar","appointmentDate"];
     requiredVisit.forEach(k=>{if(f.elements[k])f.elements[k].required=mode!=="basic"&&mode!=="basicedit"});
     f.elements.firstName.required=true;f.elements.lastName.required=true;
@@ -1327,6 +1334,7 @@ ${worksheet("สรุปค่าน้ำตาล",summaryTable("sugar"))}${w
   ["birthDate","recordDate"].forEach(name=>$("#patientForm").elements[name].addEventListener("input",()=>{
     const f=$("#patientForm"); f.elements.age.value=calculateAge(f.elements.birthDate.value,f.elements.recordDate.value);
   }));
+  ["weight","height"].forEach(name=>$("#patientForm").elements[name].addEventListener("input",updateBMIField));
   $("#patientForm").elements.recordDate.addEventListener("change",e=>preferenceSet("dmht_record_date",e.target.value));
   $("#patientForm").elements.appointmentDate.addEventListener("change",e=>preferenceSet("dmht_appointment_date",e.target.value));
   document.querySelectorAll("[data-bp-slash]").forEach(btn=>btn.addEventListener("click",()=>{
