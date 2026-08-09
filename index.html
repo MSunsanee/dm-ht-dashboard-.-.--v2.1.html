@@ -244,6 +244,9 @@
       </div>
       <div class="visit-queue" id="visitQueue">
         <label for="queueDate">วันที่ลงข้อมูล</label><input id="queueDate" type="date">
+        <label for="rangeFrom">ดูข้อมูลจากวันที่</label><input id="rangeFrom" type="date">
+        <label for="rangeTo">ถึงวันที่</label><input id="rangeTo" type="date">
+        <button type="button" class="queue-tab" id="clearRangeBtn">ล้างช่วงวันที่</button>
         <div class="queue-tabs" role="group" aria-label="สถานะการบันทึกข้อมูล">
           <button type="button" class="queue-tab" data-queue="pending">รอบันทึก <span id="pendingCount">0</span></button>
           <button type="button" class="queue-tab" data-queue="done">บันทึกแล้ว <span id="doneCount">0</span></button>
@@ -710,7 +713,7 @@
     if(currentMonth==="รวม"||months.includes(currentMonth)) $("#monthFilter").value=currentMonth;
   }
   function applyFilters() {
-    const q=$("#searchInput").value.trim().toLowerCase(), m=$("#monthFilter").value, v=$("#villageFilter").value, d=$("#diseaseFilter").value;
+    const q=$("#searchInput").value.trim().toLowerCase(), m=$("#monthFilter").value, v=$("#villageFilter").value, d=$("#diseaseFilter").value,from=$("#rangeFrom").value,to=$("#rangeTo").value;
     const queueDate=$("#queueDate").value||preferenceGet("dmht_record_date")||todayInput();
     const dayVisits=records.filter(r=>r._sheet!=="รวม"&&recordDateKey(r.recordDate)===queueDate);
     const doneKeys=new Set(dayVisits.map(patientQueueKey));
@@ -723,7 +726,8 @@
     filtered=source.filter(r=>{
       const hay=[r.hn,r.firstName,r.lastName,r.houseNo,r.village].join(" ").toLowerCase();
       const monthOK=queueMode!=="all"||!m||String(r._sheet||"")===m;
-      return (!q||hay.includes(q)) && monthOK && (!v||String(r.village??"")===v) && matchesDisease(r,d);
+      const dateKey=recordDateKey(r.recordDate),rangeOK=queueMode!=="all"||(!from&&!to)||(dateKey&&(!from||dateKey>=from)&&(!to||dateKey<=to));
+      return (!q||hay.includes(q)) && monthOK && rangeOK && (!v||String(r.village??"")===v) && matchesDisease(r,d);
     });
     // ตารางใช้ชุดข้อมูลตามคิว/ตัวกรอง แต่ Dashboard ต้องใช้ข้อมูลทั้งหมดที่ผู้ใช้มีสิทธิ์เห็น
     // เพื่อไม่ให้ยอดรวมและกราฟลดลงเมื่อผู้ป่วยถูกย้ายจาก "รอบันทึก" ไป "บันทึกแล้ว"
@@ -764,10 +768,10 @@
     const amax=Math.max(1,...counts);
     $("#ageChart").innerHTML=ranges.map((x,i)=>`<div class="age-col"><div class="age-num">${counts[i]}</div><div class="age-bar" style="height:${Math.max(3,counts[i]/amax*155)}px"></div><div class="age-label">${x[0]}</div></div>`).join("");
     $("#avgAge").textContent=ages.length?`เฉลี่ย ${Math.round(ages.reduce((a,b)=>a+b,0)/ages.length)} ปี`:"เฉลี่ย – ปี";
-    const selectedDate=$("#queueDate")?.value||preferenceGet("dmht_record_date")||todayInput(),selectedMonth=String(selectedDate).slice(0,7);
-    const selectedVisits=latestByHN(data.filter(r=>r._sheet!=="รวม"&&((/^\d{4}-\d{2}$/.test(String(r._sheet||""))?String(r._sheet):String(r.recordDate||"").slice(0,7))===selectedMonth)));
+    const from=$("#rangeFrom")?.value||"",to=$("#rangeTo")?.value||"",selectedDate=$("#queueDate")?.value||preferenceGet("dmht_record_date")||todayInput(),selectedMonth=String(selectedDate).slice(0,7);
+    const selectedVisits=latestByHN(data.filter(r=>{if(r._sheet==="รวม")return false;const key=recordDateKey(r.recordDate);if(from||to)return key&&(!from||key>=from)&&(!to||key<=to);return ((/^\d{4}-\d{2}$/.test(String(r._sheet||""))?String(r._sheet):String(r.recordDate||"").slice(0,7))===selectedMonth)}));
     dashboardData=selectedVisits;
-    const monthlyScope=`ข้อมูลผู้ป่วยทั้งหมดในเดือน ${monthLabel(selectedMonth)} · ใช้ผลล่าสุดของผู้ป่วยแต่ละราย`;
+    const monthlyScope=from||to?`ข้อมูลช่วง ${from?formatThaiDate(from):"เริ่มต้น"} ถึง ${to?formatThaiDate(to):"ปัจจุบัน"} · ใช้ผลล่าสุดของผู้ป่วยแต่ละราย`:`ข้อมูลผู้ป่วยทั้งหมดในเดือน ${monthLabel(selectedMonth)} · ใช้ผลล่าสุดของผู้ป่วยแต่ละราย`;
     $("#sugarDonutSub").textContent=monthlyScope;$("#bpDonutSub").textContent=monthlyScope;
     const sugarCounts={green:0,yellow:0,orange:0,red:0},bpCounts={green:0,yellow:0,orange:0,red:0};
     selectedVisits.forEach(r=>{const s=sugarLevel(r.bloodSugar),b=bpLevel(r.bp2||r.bp1);if(sugarCounts[s]!==undefined)sugarCounts[s]++;if(bpCounts[b]!==undefined)bpCounts[b]++});
@@ -1294,6 +1298,9 @@ ${worksheet("สรุปค่าน้ำตาล",summaryTable("sugar"))}${w
   window.addEventListener("hashchange",()=>{const target=location.hash.slice(1);if(["dashboardSection","dataCard","referralCard","reportsSection","adviceSection"].includes(target))showView(target,false)});
   $("#searchInput").addEventListener("input",applyFilters); $("#monthFilter").addEventListener("change",applyFilters); $("#villageFilter").addEventListener("change",applyFilters); $("#diseaseFilter").addEventListener("change",applyFilters);
   $("#queueDate").addEventListener("change",()=>{if($("#queueDate").value)preferenceSet("dmht_record_date",$("#queueDate").value);applyFilters()});
+  $("#rangeFrom").addEventListener("change",()=>{if($("#rangeTo").value&&$("#rangeFrom").value>$("#rangeTo").value)$("#rangeTo").value=$("#rangeFrom").value;$("#monthFilter").value="";queueMode="all";applyFilters()});
+  $("#rangeTo").addEventListener("change",()=>{if($("#rangeFrom").value&&$("#rangeTo").value<$("#rangeFrom").value)$("#rangeFrom").value=$("#rangeTo").value;$("#monthFilter").value="";queueMode="all";applyFilters()});
+  $("#clearRangeBtn").addEventListener("click",()=>{$("#rangeFrom").value="";$("#rangeTo").value="";queueMode="all";applyFilters()});
   document.querySelectorAll(".queue-tab").forEach(btn=>btn.addEventListener("click",()=>{queueMode=btn.dataset.queue;page=1;applyFilters()}));
   $("#prevBtn").addEventListener("click",()=>{if(page>1){page--;renderTable()}}); $("#nextBtn").addEventListener("click",()=>{if(page*PAGE_SIZE<filtered.length){page++;renderTable()}});
   ["birthDate","recordDate"].forEach(name=>$("#patientForm").elements[name].addEventListener("input",()=>{
