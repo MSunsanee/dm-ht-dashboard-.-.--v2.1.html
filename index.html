@@ -328,7 +328,6 @@
         <div class="field"><label>รหัสผ่าน</label><input name="password" type="password" autocomplete="current-password" required></div>
       </div>
       <div class="panel-sub">ผู้ใช้รายหมู่จะเห็นเฉพาะผู้ป่วยในหมู่บ้านที่รับผิดชอบ</div>
-      <div class="login-note" style="margin-top:12px;padding:12px"><strong>ทดลองระบบแบบไม่ใช้ข้อมูลจริง</strong><div class="panel-sub">ชื่อผู้ใช้: ทดสอบ · รหัสผ่าน: ทดสอบ</div></div>
     </div>
     <div class="modal-foot"><button type="button" class="btn btn-ghost" data-login-close>ยกเลิก</button><button type="submit" class="btn btn-primary" id="loginSubmit">เข้าสู่ระบบ</button></div>
   </form>
@@ -436,7 +435,7 @@
 
 <script>
   const GAS_URL = "https://script.google.com/macros/s/AKfycbx9y2f2fVFf2dGYV1LDuC9xISrqghO0vDg0PZjLE5ILkN0Nxf6utz3gAKCqqkIdoMt2/exec";
-  const REQUIRED_API_VERSION = 10;
+  const REQUIRED_API_VERSION = 11;
   const PAGE_SIZE = 20;
   const fields = ["recordDate","hn","firstName","lastName","birthDate","age","phone","houseNo","village","weight","height","waist","bp1","bp2","pulse","bloodSugar","appointmentDate","medicationAt","dm","ht","oldCva","hyperlipidaemia","ckdStage"];
   let records = [], filtered = [], dashboardData = [], referrals = [], currentMonthlySugar = [], currentMonthlyBP = [], page = 1, editing = null, deleting = null, auth = null, formMode = "basic", loadPromise = null, queueMode = "all";
@@ -638,7 +637,8 @@
     const ages=Array.isArray(s.ageGroups)?s.ageGroups:[], amax=Math.max(1,...ages.map(x=>Number(x.count||0)));
     $("#ageChart").innerHTML=ages.map(x=>`<div class="age-col"><div class="age-num">${Number(x.count||0)}</div><div class="age-bar" style="height:${Math.max(3,Number(x.count||0)/amax*155)}px"></div><div class="age-label">${esc(x.label)}</div></div>`).join("");
     $("#avgAge").textContent=s.avgAge!==null&&s.avgAge!==undefined?`เฉลี่ย ${s.avgAge} ปี`:"เฉลี่ย – ปี";
-    $("#sugarDonutSub").textContent="ข้อมูลภาพรวมล่าสุด · รวมทุกวันที่มีผลตรวจ";$("#bpDonutSub").textContent="ข้อมูลภาพรวมล่าสุด · รวมทุกวันที่มีผลตรวจ";
+    const publicScope=s.summaryMonth?`ข้อมูลภาพรวมเดือน ${monthLabel(s.summaryMonth)} · ไม่แสดงข้อมูลส่วนบุคคล`:"ข้อมูลภาพรวมเบื้องต้น · ไม่แสดงข้อมูลส่วนบุคคล";
+    $("#sugarDonutSub").textContent=publicScope;$("#bpDonutSub").textContent=publicScope;
     renderColorPanels(s.sugarLevels||{},s.bpLevels||{});
     currentMonthlySugar=Array.isArray(s.monthlySugar)?s.monthlySugar:[];currentMonthlyBP=Array.isArray(s.monthlyBP)?s.monthlyBP:[];renderDonutCharts(s.sugarLevels||{},s.bpLevels||{});renderMonthlySugarChart();
   }
@@ -734,11 +734,11 @@
     const amax=Math.max(1,...counts);
     $("#ageChart").innerHTML=ranges.map((x,i)=>`<div class="age-col"><div class="age-num">${counts[i]}</div><div class="age-bar" style="height:${Math.max(3,counts[i]/amax*155)}px"></div><div class="age-label">${x[0]}</div></div>`).join("");
     $("#avgAge").textContent=ages.length?`เฉลี่ย ${Math.round(ages.reduce((a,b)=>a+b,0)/ages.length)} ปี`:"เฉลี่ย – ปี";
-    const selectedDate=$("#queueDate")?.value||preferenceGet("dmht_record_date")||todayInput();
-    const selectedVisits=data.filter(r=>r._sheet!=="รวม"&&recordDateKey(r.recordDate)===selectedDate);
+    const selectedDate=$("#queueDate")?.value||preferenceGet("dmht_record_date")||todayInput(),selectedMonth=String(selectedDate).slice(0,7);
+    const selectedVisits=latestByHN(data.filter(r=>r._sheet!=="รวม"&&((/^\d{4}-\d{2}$/.test(String(r._sheet||""))?String(r._sheet):String(r.recordDate||"").slice(0,7))===selectedMonth)));
     dashboardData=selectedVisits;
-    const dailyScope=`ข้อมูลวันที่ ${formatThaiDate(selectedDate)} · ตรงกับแท็บบันทึกแล้ว`;
-    $("#sugarDonutSub").textContent=dailyScope;$("#bpDonutSub").textContent=dailyScope;
+    const monthlyScope=`ข้อมูลผู้ป่วยทั้งหมดในเดือน ${monthLabel(selectedMonth)} · ใช้ผลล่าสุดของผู้ป่วยแต่ละราย`;
+    $("#sugarDonutSub").textContent=monthlyScope;$("#bpDonutSub").textContent=monthlyScope;
     const sugarCounts={green:0,yellow:0,orange:0,red:0},bpCounts={green:0,yellow:0,orange:0,red:0};
     selectedVisits.forEach(r=>{const s=sugarLevel(r.bloodSugar),b=bpLevel(r.bp2||r.bp1);if(sugarCounts[s]!==undefined)sugarCounts[s]++;if(bpCounts[b]!==undefined)bpCounts[b]++});
     renderColorPanels(sugarCounts,bpCounts);
