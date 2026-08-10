@@ -856,7 +856,7 @@
   }
 
   function recordTime(r){const t=new Date(String(r.recordDate||"")).getTime();return Number.isFinite(t)?t:0}
-  function latestByHN(list){const map=new Map();[...list].sort((a,b)=>recordTime(a)-recordTime(b)||Number(a._row)-Number(b._row)).forEach(r=>{const hn=String(r.hn||"").trim(),fallback=patientQueueKey(r);const key=hn?`hn:${hn}`:(fallback!=="||"?`person:${fallback}`:"");if(key)map.set(key,r)});return [...map.values()]}
+  function latestByHN(list){const map=new Map();[...list].sort((a,b)=>recordTime(a)-recordTime(b)||Number(a._row)-Number(b._row)).forEach(r=>{const first=String(r.firstName||"").trim().toLowerCase(),last=String(r.lastName||"").trim().toLowerCase(),hn=String(r.hn||"").trim();const key=first||last?`person:${first}|${last}`:(hn?`hn:${hn}`:"");if(key)map.set(key,r)});return [...map.values()]}
   function buildManagementFilters(){
     const mm=$("#managementMonth").value,mv=$("#managementVillage").value;
     const months=[...new Set(records.map(r=>/^\d{4}-\d{2}$/.test(String(r._sheet||""))?String(r._sheet):String(r.recordDate||"").slice(0,7)).filter(x=>/^\d{4}-\d{2}$/.test(x)))].sort().reverse();
