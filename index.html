@@ -446,7 +446,7 @@
 
 <script>
   const GAS_URL = "https://script.google.com/macros/s/AKfycbx9y2f2fVFf2dGYV1LDuC9xISrqghO0vDg0PZjLE5ILkN0Nxf6utz3gAKCqqkIdoMt2/exec";
-  const REQUIRED_API_VERSION = 14;
+  const REQUIRED_API_VERSION = 17;
   const PAGE_SIZE = 20;
   const fields = ["recordDate","hn","firstName","lastName","birthDate","age","phone","houseNo","village","weight","height","waist","bp1","bp2","pulse","bloodSugar","appointmentDate","medicationAt","dm","ht","oldCva","hyperlipidaemia","ckdStage"];
   let records = [], filtered = [], dashboardData = [], referrals = [], currentMonthlySugar = [], currentMonthlyBP = [], publicSummary = {}, page = 1, editing = null, deleting = null, auth = null, formMode = "basic", loadPromise = null, queueMode = "all";
@@ -663,7 +663,7 @@
     try{
       const result=await api("summary");
       publicSummary=result.summary||{};preferenceSet(PUBLIC_SUMMARY_CACHE,JSON.stringify({savedAt:Date.now(),summary:publicSummary}));renderSummary(publicSummary);renderPublicPresentation(publicSummary);
-      if(Number(result.apiVersion||0)<REQUIRED_API_VERSION){setStatus("bad","ต้อง Deploy GAS เวอร์ชันใหม่");toast("GAS ที่ใช้อยู่เป็นเวอร์ชันเก่า จึงยังบันทึก visit และกู้ทะเบียน 131 คนไม่ได้",true)}
+      if(Number(result.apiVersion||0)<REQUIRED_API_VERSION){setStatus("bad","ต้อง Deploy GAS เวอร์ชันใหม่");toast("กรุณา Deploy Code.gs เวอร์ชัน 17 เพื่อใช้การแก้ HN และการบันทึกพร้อมกัน",true)}
       else setStatus("ok","ข้อมูลภาพรวมล่าสุด");
     }catch(err){
       setStatus("bad","โหลดภาพรวมไม่สำเร็จ");
@@ -1270,7 +1270,7 @@ ${worksheet("สรุปค่าน้ำตาล",summaryTable("sugar"))}${w
       const action=formMode==="basic"?"createbasic":formMode==="basicedit"?"updatebasic":formMode==="visit"?"savevisit":"update";
       const result=await api(action,wasEditing?{row:editRow,sourceSheet,data}:{data});
       if(data.recordDate)preferenceSet("dmht_record_date",data.recordDate);if(data.appointmentDate)preferenceSet("dmht_appointment_date",data.appointmentDate);
-      if(result.record){records=records.filter(r=>!(r._sheet===result.record._sheet&&String(r.hn)===String(result.record.hn)));records.push(result.record);buildFilters();applyFilters();buildManagementFilters();renderManagementReport()}
+      if(result.record){records=records.filter(r=>!(r._sheet===result.record._sheet&&Number(r._row)===Number(result.record._row)));records.push(result.record);buildFilters();applyFilters();buildManagementFilters();renderManagementReport()}
       if(formMode==="visit"&&data.recordDate){$("#queueDate").value=data.recordDate;queueMode="pending";applyFilters()}
       closeForm(); toast(result.message||"บันทึกข้อมูลเรียบร้อย");
       if(result.line?.sent) toast("ส่งแจ้งเตือนผู้ป่วยสีแดงเข้า LINE OA แล้ว");
