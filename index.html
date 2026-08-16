@@ -406,7 +406,7 @@
         <div class="field"><label>ชีพจร (ครั้ง/นาที) <span class="required-star">*</span></label><input name="pulse" type="number" min="0" required></div>
         <div class="field"><label>ความดัน ครั้งที่ 1 <span class="required-star">*</span></label><div class="bp-input-wrap"><input name="bp1" inputmode="numeric" autocomplete="off" placeholder="เช่น 138/82" enterkeyhint="next" pattern="[0-9]{2,3}\s*/\s*[0-9]{2,3}" title="กรอกในรูปแบบ 138/82" required><button class="bp-slash-btn" type="button" data-bp-slash="bp1" aria-label="ใส่เครื่องหมายทับในค่าความดัน">/</button></div></div>
         <div class="field"><label>ความดัน ครั้งที่ 2</label><div class="bp-input-wrap"><input name="bp2" inputmode="numeric" autocomplete="off" placeholder="กรณีครั้งแรก ≥ 140/90" enterkeyhint="next"><button class="bp-slash-btn" type="button" data-bp-slash="bp2" aria-label="ใส่เครื่องหมายทับในค่าความดัน">/</button></div></div>
-        <div class="field"><label>น้ำตาล (mg/dL) <span class="required-star">*</span></label><input name="bloodSugar" type="number" step="0.1" min="0" required></div>
+        <div class="field"><label>น้ำตาล (mg/dL) <span class="required-star">*</span></label><div class="bp-input-wrap"><input name="bloodSugar" inputmode="decimal" autocomplete="off" placeholder="เช่น 120 หรือ - หากไม่ได้ตรวจ" enterkeyhint="next" pattern="(?:-|[0-9]+(?:\.[0-9]+)?)" title="กรอกค่าน้ำตาลเป็นตัวเลข หรือ - หากไม่ได้ตรวจ" required><button class="bp-slash-btn" type="button" data-sugar-na aria-label="ระบุว่าไม่ได้ตรวจน้ำตาล">−</button></div></div>
         <div class="field"><label>วันนัดครั้งต่อไป <span class="required-star">*</span></label><input name="appointmentDate" type="date" required></div>
       </div></div>
       <div class="disease-section"><div class="section-title">กลุ่มโรค</div>
@@ -462,7 +462,7 @@
 
 <script>
   const GAS_URL = "https://script.google.com/macros/s/AKfycbx9y2f2fVFf2dGYV1LDuC9xISrqghO0vDg0PZjLE5ILkN0Nxf6utz3gAKCqqkIdoMt2/exec";
-  const REQUIRED_API_VERSION = 17;
+  const REQUIRED_API_VERSION = 18;
   const PAGE_SIZE = 20;
   const fields = ["recordDate","hn","firstName","lastName","birthDate","age","phone","houseNo","village","weight","height","waist","bp1","bp2","pulse","bloodSugar","appointmentDate","medicationAt","dm","ht","oldCva","hyperlipidaemia","ckdStage"];
   let records = [], filtered = [], dashboardData = [], referrals = [], currentMonthlySugar = [], currentMonthlyBP = [], publicSummary = {}, page = 1, editing = null, deleting = null, auth = null, formMode = "basic", loadPromise = null, queueMode = "all";
@@ -679,7 +679,7 @@
     try{
       const result=await api("summary");
       publicSummary=result.summary||{};preferenceSet(PUBLIC_SUMMARY_CACHE,JSON.stringify({savedAt:Date.now(),summary:publicSummary}));renderSummary(publicSummary);renderPublicPresentation(publicSummary);
-      if(Number(result.apiVersion||0)<REQUIRED_API_VERSION){setStatus("bad","ต้อง Deploy GAS เวอร์ชันใหม่");toast("กรุณา Deploy Code.gs เวอร์ชัน 17 เพื่อใช้การแก้ HN และการบันทึกพร้อมกัน",true)}
+      if(Number(result.apiVersion||0)<REQUIRED_API_VERSION){setStatus("bad","ต้อง Deploy GAS เวอร์ชันใหม่");toast("กรุณา Deploy Code.gs เวอร์ชัน 18 เพื่อรองรับค่าน้ำตาลที่ไม่ได้ตรวจ",true)}
       else setStatus("ok","ข้อมูลภาพรวมล่าสุด");
     }catch(err){
       setStatus("bad","โหลดภาพรวมไม่สำเร็จ");
@@ -1371,6 +1371,12 @@ ${worksheet("สรุปค่าน้ำตาล",summaryTable("sugar"))}${w
     input.value=input.value.slice(0,start)+"/"+input.value.slice(end);
     input.focus();input.setSelectionRange(start+1,start+1);input.dispatchEvent(new Event("input",{bubbles:true}));
   }));
+  document.querySelector("[data-sugar-na]")?.addEventListener("click",()=>{
+    const input=$("#patientForm").elements.bloodSugar;
+    input.value="-";
+    input.focus();
+    input.dispatchEvent(new Event("input",{bubbles:true}));
+  });
   $("#closeRedAlert").addEventListener("click",()=>$("#redScreen").classList.remove("show"));
   document.addEventListener("keydown",e=>{if(e.key==="Escape"){closeForm();$("#deleteOverlay").classList.remove("show");$("#colorPatientsOverlay").classList.remove("show");$("#loginOverlay").classList.remove("show");$("#passwordOverlay").classList.remove("show");$("#referralOverlay").classList.remove("show");$("#referralPatientsOverlay").classList.remove("show");$("#visitFilesOverlay").classList.remove("show")}});
   restoreSession();
