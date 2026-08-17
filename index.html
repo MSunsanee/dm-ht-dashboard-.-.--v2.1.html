@@ -39,9 +39,8 @@
     .middle{display:grid;grid-template-columns:1.08fr .92fr;gap:14px;margin-top:14px}
     .panel{padding:20px}.panel-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:18px}
     .panel-title{font-size:17px;font-weight:800}.panel-sub{font-size:12px;color:var(--muted);margin-top:3px}
-    .village-chart{display:grid;gap:11px}.bar-row{display:grid;grid-template-columns:70px 1fr 44px;align-items:center;gap:10px;font-size:13px}
-    .bar-track{height:10px;background:#e9f0ee;border-radius:99px;overflow:hidden}.bar-fill{height:100%;border-radius:99px;
-      background:linear-gradient(90deg,#14b8a6,#0f766e);transition:width .35s}.bar-num{text-align:right;font-weight:700}
+    .village-chart{display:grid;gap:11px}.village-legend{display:flex;justify-content:flex-end;gap:14px;flex-wrap:wrap;font-size:12px;color:#58716d}.village-legend span{display:inline-flex;align-items:center;gap:5px}.village-key{width:11px;height:11px;border-radius:3px}.village-key.total{background:#0f766e}.village-key.checked{background:#3b82f6}.bar-row{display:grid;grid-template-columns:70px 1fr 112px;align-items:center;gap:10px;font-size:13px}.bar-pair{display:grid;gap:4px}
+    .bar-track{height:8px;background:#e9f0ee;border-radius:99px;overflow:hidden}.bar-fill{height:100%;border-radius:99px;transition:width .35s}.bar-fill.total{background:linear-gradient(90deg,#14b8a6,#0f766e)}.bar-fill.checked{background:linear-gradient(90deg,#60a5fa,#2563eb)}.bar-num{text-align:right;font-weight:700;white-space:nowrap}.bar-num small{display:block;color:#2563eb;font-weight:700}
     .age-chart{height:215px;display:flex;align-items:flex-end;justify-content:space-around;gap:12px;padding:12px 8px 0}
     .age-col{height:100%;flex:1;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;min-width:38px}
     .age-num{font-size:12px;font-weight:800;margin-bottom:6px}.age-bar{width:min(42px,75%);min-height:4px;background:linear-gradient(#60a5fa,#2563eb);
@@ -141,7 +140,7 @@
       .shell,main,.middle,.middle>*,.card,.panel{min-width:0;max-width:100%}
       main{width:100%;padding-left:max(12px,env(safe-area-inset-left));padding-right:max(12px,env(safe-area-inset-right))}
       .panel{overflow:hidden;padding-left:16px;padding-right:16px}
-      .bar-row{grid-template-columns:58px minmax(0,1fr) 28px;gap:6px}
+      .bar-row{grid-template-columns:48px minmax(0,1fr) 72px;gap:6px}.bar-num{font-size:11px}.bar-num small{font-size:10px}.village-legend{justify-content:flex-start;gap:10px;font-size:10px}
       .age-chart{width:100%;gap:4px;padding-left:0;padding-right:0;justify-content:space-between}
       .age-col{min-width:0}
       .age-label{font-size:10px;white-space:nowrap}
@@ -211,7 +210,7 @@
 
     <section class="middle">
       <article class="card panel">
-        <div class="panel-head"><div><div class="panel-title">ผู้ป่วยแยกตามหมู่บ้าน</div><div class="panel-sub">จำนวนผู้ป่วยในแต่ละหมู่</div></div></div>
+        <div class="panel-head"><div><div class="panel-title">ผู้ป่วยแยกตามหมู่บ้าน</div><div class="panel-sub" id="villageChartSub">ผู้ป่วยทั้งหมดเทียบกับผู้ที่ได้รับการตรวจ</div></div></div>
         <div class="village-chart" id="villageChart"><div class="empty">กำลังโหลดข้อมูล…</div></div>
       </article>
       <article class="card panel">
@@ -462,7 +461,7 @@
 
 <script>
   const GAS_URL = "https://script.google.com/macros/s/AKfycbx9y2f2fVFf2dGYV1LDuC9xISrqghO0vDg0PZjLE5ILkN0Nxf6utz3gAKCqqkIdoMt2/exec";
-  const REQUIRED_API_VERSION = 19;
+  const REQUIRED_API_VERSION = 20;
   const PAGE_SIZE = 20;
   const fields = ["recordDate","hn","firstName","lastName","birthDate","age","phone","houseNo","village","weight","height","waist","bp1","bp2","pulse","bloodSugar","appointmentDate","medicationAt","dm","ht","oldCva","hyperlipidaemia","ckdStage"];
   let records = [], filtered = [], dashboardData = [], referrals = [], currentMonthlySugar = [], currentMonthlyBP = [], publicSummary = {}, page = 1, editing = null, deleting = null, auth = null, formMode = "basic", loadPromise = null, queueMode = "all";
@@ -679,7 +678,7 @@
     try{
       const result=await api("summary");
       publicSummary=result.summary||{};preferenceSet(PUBLIC_SUMMARY_CACHE,JSON.stringify({savedAt:Date.now(),summary:publicSummary}));renderSummary(publicSummary);renderPublicPresentation(publicSummary);
-      if(Number(result.apiVersion||0)<REQUIRED_API_VERSION){setStatus("bad","ต้อง Deploy GAS เวอร์ชันใหม่");toast("กรุณา Deploy Code.gs เวอร์ชัน 19 เพื่อเพิ่มความเร็วและรองรับการบันทึกพร้อมกัน",true)}
+      if(Number(result.apiVersion||0)<REQUIRED_API_VERSION){setStatus("bad","ต้อง Deploy GAS เวอร์ชันใหม่");toast("กรุณา Deploy Code.gs เวอร์ชัน 20 เพื่อแสดงความครอบคลุมการตรวจรายหมู่บ้าน",true)}
       else setStatus("ok","ข้อมูลภาพรวมล่าสุด");
     }catch(err){
       setStatus("bad","โหลดภาพรวมไม่สำเร็จ");
@@ -711,8 +710,8 @@
     $("#kpiDM").textContent=Number(s.dm||0).toLocaleString("th-TH");
     $("#kpiHT").textContent=Number(s.ht||0).toLocaleString("th-TH");
     $("#kpiBoth").textContent=Number(s.both||0).toLocaleString("th-TH");
-    const villages=Array.isArray(s.villages)?s.villages:[], vmax=Math.max(1,...villages.map(x=>Number(x.count||0)));
-    $("#villageChart").innerHTML=villages.length?villages.map(x=>`<div class="bar-row"><div>หมู่ ${esc(x.village)}</div><div class="bar-track"><div class="bar-fill" style="width:${Number(x.count||0)/vmax*100}%"></div></div><div class="bar-num">${Number(x.count||0)}</div></div>`).join(""):'<div class="empty">ยังไม่มีข้อมูลหมู่บ้าน</div>';
+    const villages=Array.isArray(s.villages)?s.villages:[];
+    renderVillageCoverage(villages,s.summaryMonth?`ผลตรวจเดือน ${monthLabel(s.summaryMonth)}`:"เดือนล่าสุด");
     const ages=Array.isArray(s.ageGroups)?s.ageGroups:[], amax=Math.max(1,...ages.map(x=>Number(x.count||0)));
     $("#ageChart").innerHTML=ages.map(x=>`<div class="age-col"><div class="age-num">${Number(x.count||0)}</div><div class="age-bar" style="height:${Math.max(3,Number(x.count||0)/amax*155)}px"></div><div class="age-label">${esc(x.label)}</div></div>`).join("");
     $("#avgAge").textContent=s.avgAge!==null&&s.avgAge!==undefined?`เฉลี่ย ${s.avgAge} ปี`:"เฉลี่ย – ปี";
@@ -720,6 +719,12 @@
     $("#sugarDonutSub").textContent=publicScope;$("#bpDonutSub").textContent=publicScope;
     renderColorPanels(s.sugarLevels||{},s.bpLevels||{});
     currentMonthlySugar=Array.isArray(s.monthlySugar)?s.monthlySugar:[];currentMonthlyBP=Array.isArray(s.monthlyBP)?s.monthlyBP:[];renderDonutCharts(s.sugarLevels||{},s.bpLevels||{});renderMonthlySugarChart();if(!auth)renderPublicManagementReport(s);
+  }
+
+  function renderVillageCoverage(villages,scopeText){
+    const rows=(villages||[]).map(x=>({village:String(x.village??""),count:Number(x.count??x.total??0),checked:Number(x.checked||0)})).filter(x=>x.village),vmax=Math.max(1,...rows.map(x=>x.count));
+    $("#villageChartSub").textContent=`ผู้ป่วยทั้งหมดเทียบกับผู้ที่ได้รับการตรวจ · ${scopeText||"เดือนล่าสุด"}`;
+    $("#villageChart").innerHTML=rows.length?`<div class="village-legend"><span><i class="village-key total"></i>ผู้ป่วยทั้งหมด</span><span><i class="village-key checked"></i>ตรวจแล้ว</span></div>`+rows.map(x=>{const checked=Math.min(x.count,x.checked),pct=x.count?Math.round(checked/x.count*100):0;return `<div class="bar-row"><div>หมู่ ${esc(x.village)}</div><div class="bar-pair"><div class="bar-track" title="ผู้ป่วยทั้งหมด ${x.count} ราย"><div class="bar-fill total" style="width:${x.count/vmax*100}%"></div></div><div class="bar-track" title="ตรวจแล้ว ${checked} ราย ร้อยละ ${pct}"><div class="bar-fill checked" style="width:${checked/vmax*100}%"></div></div></div><div class="bar-num">${x.count} ราย<small>${checked} (${pct}%)</small></div></div>`}).join(""):'<div class="empty">ยังไม่มีข้อมูลหมู่บ้าน</div>';
   }
 
   async function loadData(showToast=false) {
@@ -808,17 +813,16 @@
     $("#kpiDM").textContent=patients.filter(r=>isYes(r.dm)).length.toLocaleString("th-TH");
     $("#kpiHT").textContent=patients.filter(r=>isYes(r.ht)).length.toLocaleString("th-TH");
     $("#kpiBoth").textContent=patients.filter(r=>isYes(r.dm)&&isYes(r.ht)).length.toLocaleString("th-TH");
-    const groups={}; patients.forEach(r=>{const v=String(r.village??"").trim();if(v)groups[v]=(groups[v]||0)+1});
-    const villages=Object.entries(groups).sort((a,b)=>Number(a[0])-Number(b[0])||a[0].localeCompare(b[0],"th"));
-    const vmax=Math.max(1,...villages.map(x=>x[1]));
-    $("#villageChart").innerHTML=villages.length?villages.map(([v,n])=>`<div class="bar-row"><div>หมู่ ${esc(v)}</div><div class="bar-track"><div class="bar-fill" style="width:${n/vmax*100}%"></div></div><div class="bar-num">${n}</div></div>`).join(""):'<div class="empty">ยังไม่มีข้อมูลหมู่บ้าน</div>';
+    const from=$("#rangeFrom")?.value||"",to=$("#rangeTo")?.value||"",selectedDate=$("#queueDate")?.value||preferenceGet("dmht_record_date")||todayInput(),selectedMonth=String(selectedDate).slice(0,7);
+    const selectedVisits=latestByHN(data.filter(r=>{if(r._sheet==="รวม")return false;const key=recordDateKey(r.recordDate);if(from||to)return key&&(!from||key>=from)&&(!to||key<=to);return ((/^\d{4}-\d{2}$/.test(String(r._sheet||""))?String(r._sheet):String(r.recordDate||"").slice(0,7))===selectedMonth)}));
+    const groups={},checkedGroups={};patients.forEach(r=>{const v=String(r.village??"").trim();if(v)groups[v]=(groups[v]||0)+1});selectedVisits.forEach(r=>{const v=String(r.village??"").trim();if(v)checkedGroups[v]=(checkedGroups[v]||0)+1});
+    const villages=Object.entries(groups).sort((a,b)=>Number(a[0])-Number(b[0])||a[0].localeCompare(b[0],"th")).map(([v,count])=>({village:v,count,checked:checkedGroups[v]||0}));
+    renderVillageCoverage(villages,from||to?`${from?formatThaiDate(from):"เริ่มต้น"} ถึง ${to?formatThaiDate(to):"ปัจจุบัน"}`:`เดือน ${monthLabel(selectedMonth)}`);
     const ranges=[["<40",0,39],["40–49",40,49],["50–59",50,59],["60–69",60,69],["70–79",70,79],["80+",80,999]];
     const ages=patients.map(r=>Number(r.age)).filter(n=>Number.isFinite(n)&&n>0), counts=ranges.map(x=>ages.filter(a=>a>=x[1]&&a<=x[2]).length);
     const amax=Math.max(1,...counts);
     $("#ageChart").innerHTML=ranges.map((x,i)=>`<div class="age-col"><div class="age-num">${counts[i]}</div><div class="age-bar" style="height:${Math.max(3,counts[i]/amax*155)}px"></div><div class="age-label">${x[0]}</div></div>`).join("");
     $("#avgAge").textContent=ages.length?`เฉลี่ย ${Math.round(ages.reduce((a,b)=>a+b,0)/ages.length)} ปี`:"เฉลี่ย – ปี";
-    const from=$("#rangeFrom")?.value||"",to=$("#rangeTo")?.value||"",selectedDate=$("#queueDate")?.value||preferenceGet("dmht_record_date")||todayInput(),selectedMonth=String(selectedDate).slice(0,7);
-    const selectedVisits=latestByHN(data.filter(r=>{if(r._sheet==="รวม")return false;const key=recordDateKey(r.recordDate);if(from||to)return key&&(!from||key>=from)&&(!to||key<=to);return ((/^\d{4}-\d{2}$/.test(String(r._sheet||""))?String(r._sheet):String(r.recordDate||"").slice(0,7))===selectedMonth)}));
     dashboardData=selectedVisits;
     const monthlyScope=from||to?`ข้อมูลช่วง ${from?formatThaiDate(from):"เริ่มต้น"} ถึง ${to?formatThaiDate(to):"ปัจจุบัน"} · ใช้ผลล่าสุดของผู้ป่วยแต่ละราย`:`ข้อมูลผู้ป่วยทั้งหมดในเดือน ${monthLabel(selectedMonth)} · ใช้ผลล่าสุดของผู้ป่วยแต่ละราย`;
     $("#sugarDonutSub").textContent=monthlyScope;$("#bpDonutSub").textContent=monthlyScope;
