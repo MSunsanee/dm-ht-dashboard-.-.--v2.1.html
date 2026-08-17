@@ -461,7 +461,7 @@
 
 <script>
   const GAS_URL = "https://script.google.com/macros/s/AKfycbx9y2f2fVFf2dGYV1LDuC9xISrqghO0vDg0PZjLE5ILkN0Nxf6utz3gAKCqqkIdoMt2/exec";
-  const REQUIRED_API_VERSION = 20;
+  const REQUIRED_API_VERSION = 21;
   const PAGE_SIZE = 20;
   const fields = ["recordDate","hn","firstName","lastName","birthDate","age","phone","houseNo","village","weight","height","waist","bp1","bp2","pulse","bloodSugar","appointmentDate","medicationAt","dm","ht","oldCva","hyperlipidaemia","ckdStage"];
   let records = [], filtered = [], dashboardData = [], referrals = [], currentMonthlySugar = [], currentMonthlyBP = [], publicSummary = {}, page = 1, editing = null, deleting = null, auth = null, formMode = "basic", loadPromise = null, queueMode = "all";
@@ -678,7 +678,7 @@
     try{
       const result=await api("summary");
       publicSummary=result.summary||{};preferenceSet(PUBLIC_SUMMARY_CACHE,JSON.stringify({savedAt:Date.now(),summary:publicSummary}));renderSummary(publicSummary);renderPublicPresentation(publicSummary);
-      if(Number(result.apiVersion||0)<REQUIRED_API_VERSION){setStatus("bad","ต้อง Deploy GAS เวอร์ชันใหม่");toast("กรุณา Deploy Code.gs เวอร์ชัน 20 เพื่อแสดงความครอบคลุมการตรวจรายหมู่บ้าน",true)}
+      if(Number(result.apiVersion||0)<REQUIRED_API_VERSION){setStatus("bad","ต้อง Deploy GAS เวอร์ชันใหม่");toast("กรุณา Deploy Code.gs เวอร์ชัน 21 เพื่อซิงก์วันเกิดและเบอร์โทรเข้าทะเบียนหลัก",true)}
       else setStatus("ok","ข้อมูลภาพรวมล่าสุด");
     }catch(err){
       setStatus("bad","โหลดภาพรวมไม่สำเร็จ");
@@ -738,6 +738,7 @@
       records = Array.isArray(result.data) ? result.data : [];
       referrals = Array.isArray(referralResult.data) ? referralResult.data : [];
       records = records.map((r,i)=>({...r,pulse:normalizePulse(r.pulse),_row:Number(r._row||r.row||i+5),_sheet:String(r._sheet||"รวม")}));
+      records = hydrateMasterDemographics(records);
       // records includes both master patients and monthly visit rows.  The
       // signed-in status must show unique patients, not the raw row count.
       const masterCount=records.filter(r=>r._sheet==="รวม").length;
@@ -944,6 +945,15 @@
   };
 
   const registryPatientKey=r=>String(r.hn||"").trim()?`hn:${String(r.hn).trim()}`:`name:${patientQueueKey(r)}`;
+  function hydrateMasterDemographics(list){
+    const profileKey=r=>{const name=`${String(r.firstName||"").trim()}|${String(r.lastName||"").trim()}`;return name!=="|"?`name:${name}`:`hn:${String(r.hn||"").trim()}`};
+    const profiles=new Map();
+    list.filter(r=>r._sheet!=="รวม").sort((a,b)=>recordTime(a)-recordTime(b)||Number(a._row)-Number(b._row)).forEach(r=>{
+      const key=profileKey(r),old=profiles.get(key)||{};
+      profiles.set(key,{birthDate:String(r.birthDate||"").trim()||old.birthDate||"",phone:String(r.phone||"").trim()||old.phone||""});
+    });
+    return list.map(r=>{if(r._sheet!=="รวม")return r;const p=profiles.get(profileKey(r));return p?{...r,birthDate:String(r.birthDate||"").trim()||p.birthDate,phone:String(r.phone||"").trim()||p.phone}:r});
+  }
   function buildMonthlyRegistryFilters(){
     if(!["admin","staff","demo"].includes(auth?.role))return;
     const monthSelect=$("#registryMonth"),villageSelect=$("#registryVillage"),oldMonth=monthSelect.value,oldVillage=villageSelect.value;
@@ -959,7 +969,7 @@
     const masters=records.filter(r=>r._sheet==="รวม"&&(!village||String(r.village||"")===village));
     const visits=records.filter(r=>r._sheet!=="รวม"&&((/^\d{4}-\d{2}$/.test(String(r._sheet||""))?String(r._sheet):String(r.recordDate||"").slice(0,7))===month));
     const latest=new Map();visits.forEach(r=>{const key=registryPatientKey(r),old=latest.get(key);if(!old||recordTime(r)>=recordTime(old)||Number(r._row)>Number(old._row))latest.set(key,r)});
-    const rows=masters.sort((a,b)=>Number(a.village)-Number(b.village)||String(a.firstName||"").localeCompare(String(b.firstName||""),"th")).map(patient=>({patient,visit:latest.get(registryPatientKey(patient))||null}));
+    const rows=masters.sort((a,b)=>Number(a.village)-Number(b.village)||String(a.firstName||"").localeCompare(String(b.firstName||""),"th")).map(patient=>{const visit=latest.get(registryPatientKey(patient))||null;return {patient:visit?{...patient,birthDate:String(patient.birthDate||"").trim()||visit.birthDate||"",phone:String(patient.phone||"").trim()||visit.phone||""}:patient,visit}});
     if(!applyStatus)return rows;
     const status=$("#registryStatus")?.value||"all";
     return status==="recorded"?rows.filter(x=>x.visit):status==="missing"?rows.filter(x=>!x.visit):rows;
@@ -982,7 +992,7 @@
     const widths=[34,78,38,62,92,92,82,82,78,48,48,48,48,75,75,48,56,64,66,82,76];
     const styles=`<Styles><Style ss:ID="Default"><Font ss:FontName="TH SarabunPSK" ss:Size="15"/><Alignment ss:Vertical="Center" ss:WrapText="1"/><Borders><Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#D7E4E1"/><Border ss:Position="Left" ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#D7E4E1"/><Border ss:Position="Right" ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#D7E4E1"/><Border ss:Position="Top" ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#D7E4E1"/></Borders></Style><Style ss:ID="Title"><Font ss:FontName="TH SarabunPSK" ss:Size="18" ss:Bold="1" ss:Color="#FFFFFF"/><Interior ss:Color="#0F766E" ss:Pattern="Solid"/><Alignment ss:Horizontal="Center" ss:Vertical="Center"/></Style><Style ss:ID="Summary"><Font ss:FontName="TH SarabunPSK" ss:Size="15" ss:Bold="1"/><Interior ss:Color="#E8F5F2" ss:Pattern="Solid"/><Alignment ss:Horizontal="Left"/></Style><Style ss:ID="Header"><Font ss:FontName="TH SarabunPSK" ss:Size="15" ss:Bold="1" ss:Color="#FFFFFF"/><Interior ss:Color="#0F766E" ss:Pattern="Solid"/><Alignment ss:Horizontal="Center" ss:Vertical="Center" ss:WrapText="1"/></Style><Style ss:ID="Green"><Interior ss:Color="#DCFCE7" ss:Pattern="Solid"/><Font ss:FontName="TH SarabunPSK" ss:Size="15" ss:Color="#166534" ss:Bold="1"/></Style><Style ss:ID="Yellow"><Interior ss:Color="#FEF9C3" ss:Pattern="Solid"/><Font ss:FontName="TH SarabunPSK" ss:Size="15" ss:Color="#854D0E" ss:Bold="1"/></Style><Style ss:ID="Orange"><Interior ss:Color="#FFEDD5" ss:Pattern="Solid"/><Font ss:FontName="TH SarabunPSK" ss:Size="15" ss:Color="#9A3412" ss:Bold="1"/></Style><Style ss:ID="Red"><Interior ss:Color="#FEE2E2" ss:Pattern="Solid"/><Font ss:FontName="TH SarabunPSK" ss:Size="15" ss:Color="#991B1B" ss:Bold="1"/></Style><Style ss:ID="Recorded"><Interior ss:Color="#DCFCE7" ss:Pattern="Solid"/><Font ss:FontName="TH SarabunPSK" ss:Size="15" ss:Color="#166534" ss:Bold="1"/></Style><Style ss:ID="Missing"><Interior ss:Color="#FEE2E2" ss:Pattern="Solid"/><Font ss:FontName="TH SarabunPSK" ss:Size="15" ss:Color="#991B1B" ss:Bold="1"/></Style></Styles>`;
     const recorded=allRows.filter(x=>x.visit).length,summary=`${monthLabel(month)} · ${village?`หมู่ ${village}`:"ทุกหมู่บ้าน"} · ผู้ป่วยทั้งหมด ${allRows.length} คน · ตรวจแล้ว ${recorded} คน · ยังไม่ตรวจ ${allRows.length-recorded} คน · รายการที่ดาวน์โหลด: ${statusLabel} ${rows.length} คน`;
-    const xml=`<?xml version="1.0" encoding="UTF-8"?><?mso-application progid="Excel.Sheet"?><Workbook xmlns="urn:schemas-microsoft-com:office:spreadsheet" xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns:ss="urn:schemas-microsoft-com:office:spreadsheet">${styles}<Worksheet ss:Name="ทะเบียนรายเดือน"><Table>${widths.map(w=>`<Column ss:AutoFitWidth="0" ss:Width="${w}"/>`).join("")}<Row ss:Height="30"><Cell ss:MergeAcross="19" ss:StyleID="Title"><Data ss:Type="String">ทะเบียนผู้ป่วยรายหมู่ประจำเดือน</Data></Cell></Row><Row ss:Height="24"><Cell ss:MergeAcross="19" ss:StyleID="Summary"><Data ss:Type="String">${xe(summary)}</Data></Cell></Row><Row ss:Height="34">${headers.map(h=>cell(h,"Header")).join("")}</Row>${detailRows}</Table><WorksheetOptions xmlns="urn:schemas-microsoft-com:office:excel"><PageSetup><Layout x:Orientation="Landscape"/><Header x:Margin="0.2"/><Footer x:Margin="0.2"/><PageMargins x:Bottom="0.35" x:Left="0.25" x:Right="0.25" x:Top="0.35"/></PageSetup><FitToPage/><Print><ValidPrinterInfo/><PaperSizeIndex>9</PaperSizeIndex><FitWidth>1</FitWidth><FitHeight>0</FitHeight><HorizontalResolution>600</HorizontalResolution><VerticalResolution>600</VerticalResolution></Print><FreezePanes/><FrozenNoSplit/><SplitHorizontal>3</SplitHorizontal><TopRowBottomPane>3</TopRowBottomPane><ProtectObjects>False</ProtectObjects><ProtectScenarios>False</ProtectScenarios></WorksheetOptions></Worksheet></Workbook>`;
+    const xml=`<?xml version="1.0" encoding="UTF-8"?><?mso-application progid="Excel.Sheet"?><Workbook xmlns="urn:schemas-microsoft-com:office:spreadsheet" xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns:ss="urn:schemas-microsoft-com:office:spreadsheet">${styles}<Worksheet ss:Name="ทะเบียนรายเดือน"><Table>${widths.map(w=>`<Column ss:AutoFitWidth="0" ss:Width="${w}"/>`).join("")}<Row ss:Height="30"><Cell ss:MergeAcross="19" ss:StyleID="Title"><Data ss:Type="String">ทะเบียนผู้ป่วยรายหมู่ประจำเดือน</Data></Cell></Row><Row ss:Height="24"><Cell ss:MergeAcross="19" ss:StyleID="Summary"><Data ss:Type="String">${xe(summary)}</Data></Cell></Row><Row ss:Height="34">${headers.map(h=>cell(h,"Header")).join("")}</Row>${detailRows}</Table><WorksheetOptions xmlns="urn:schemas-microsoft-com:office:excel"><PageSetup><Layout x:Orientation="Landscape"/><Header x:Margin="0.2"/><Footer x:Margin="0.2"/><PageMargins x:Bottom="0.35" x:Left="0.25" x:Right="0.25" x:Top="0.35"/></PageSetup><FitToPage/><Print><ValidPrinterInfo/><PaperSizeIndex>9</PaperSizeIndex><FitWidth>1</FitWidth><FitHeight>0</FitHeight><HorizontalResolution>600</HorizontalResolution><VerticalResolution>600</VerticalResolution></Print><FreezePanes/><FrozenNoSplit/><SplitHorizontal>3</SplitHorizontal><TopRowBottomPane>3</TopRowBottomPane><ActivePane>2</ActivePane><Panes><Pane><Number>2</Number><ActiveRow>3</ActiveRow><ActiveCol>0</ActiveCol><RangeSelection>A4</RangeSelection></Pane></Panes><ProtectObjects>False</ProtectObjects><ProtectScenarios>False</ProtectScenarios></WorksheetOptions></Worksheet></Workbook>`;
     const blob=new Blob(["\ufeff",xml],{type:"application/vnd.ms-excel;charset=utf-8"}),link=document.createElement("a");link.href=URL.createObjectURL(blob);link.download=`ทะเบียนผู้ป่วย-${village?`หมู่-${village}`:"ทุกหมู่"}-${month}.xls`;document.body.appendChild(link);link.click();link.remove();setTimeout(()=>URL.revokeObjectURL(link.href),1000);toast(`ดาวน์โหลดทะเบียน ${rows.length} คนแล้ว`);
   }
 
