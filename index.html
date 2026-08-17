@@ -484,9 +484,9 @@
   function showView(target,updateHash=true){
     let view=String(target||"dashboardSection");
     if(auth&&view==="referralCard"&&!["admin","viewer","staff","demo"].includes(auth?.role)){toast("เมนูส่งต่อ-รับกลับไม่อยู่ในสิทธิ์ผู้ใช้นี้",true);view="dashboardSection"}
-    if(auth&&view==="reportsSection"&&!["admin","staff","demo"].includes(auth?.role)){toast("เมนูรายงานไม่อยู่ในสิทธิ์ผู้ใช้นี้",true);view="dashboardSection"}
+    if(auth&&view==="reportsSection"&&!["admin","viewer","staff","demo"].includes(auth?.role)){toast("เมนูรายงานไม่อยู่ในสิทธิ์ผู้ใช้นี้",true);view="dashboardSection"}
     document.querySelectorAll(".app-view").forEach(el=>el.hidden=el.dataset.view!==view);
-    if(view==="reportsSection"&&["admin","staff","demo"].includes(auth?.role)){renderManagementReport();renderMonthlyRegistry()}
+    if(view==="reportsSection"&&["admin","viewer","staff","demo"].includes(auth?.role)){renderManagementReport();renderMonthlyRegistry()}
     document.querySelectorAll(".side-link").forEach(link=>link.classList.toggle("active",link.dataset.nav===view));
     if(updateHash&&history.replaceState)history.replaceState(null,"","#"+view);
     window.scrollTo({top:0,behavior:"smooth"});closeSidebar();
@@ -500,15 +500,15 @@
       return;
     }
     $("#referralNav").style.display=["admin","viewer","staff","demo"].includes(role)?"flex":"none";
-    $("#reportsNav").style.display=["admin","staff","demo"].includes(role)?"flex":"none";
+    $("#reportsNav").style.display=["admin","viewer","staff","demo"].includes(role)?"flex":"none";
     $("#reportGrid").style.display=["admin","demo"].includes(role)?"grid":"none";
     $("#reportReadOnlyNote").style.display=["admin","demo"].includes(role)?"none":"block";
     $("#referralReportOption").style.display=["admin","demo"].includes(role)?"block":"none";
-    $("#managementReport").style.display=["admin","staff","demo"].includes(role)?"block":"none";
+    $("#managementReport").style.display=["admin","viewer","staff","demo"].includes(role)?"block":"none";
     $("#monthlyRegistryReport").style.display=["admin","staff","demo"].includes(role)?"block":"none";
-    $("#printManagementBtn").style.display=["admin","demo"].includes(role)?"inline-flex":"none";
+    $("#printManagementBtn").style.display=["admin","viewer","demo"].includes(role)?"inline-flex":"none";
     if(!role)$("#reportReadOnlyNote").innerHTML='<div class="lock">🔒</div><strong>กรุณาเข้าสู่ระบบเพื่อใช้งานรายงาน</strong>';
-    else if(role==="viewer")$("#reportReadOnlyNote").innerHTML='<div class="lock">🔒</div><strong>บัญชีรพ.แม่ข่ายมีสิทธิ์ดูข้อมูลเท่านั้น</strong><div class="panel-sub">ไม่สามารถดาวน์โหลดรายงานได้</div>';
+    else if(role==="viewer")$("#reportReadOnlyNote").innerHTML='<div class="lock">🔒</div><strong>บัญชีรพ.แม่ข่ายมีสิทธิ์ดูและพิมพ์ข้อมูลคัดกรอง</strong><div class="panel-sub">ไม่สามารถเพิ่ม แก้ไข หรือลบข้อมูลผู้ป่วยได้</div>';
     else if(role==="staff")$("#reportReadOnlyNote").innerHTML='<div class="lock">🔒</div><strong>บัญชีเจ้าหน้าที่ดูรายงานได้ทุกส่วน</strong><div class="panel-sub">เป็นข้อมูลแบบอ่านอย่างเดียว ไม่สามารถดาวน์โหลดหรือดำเนินการจัดการได้</div>';
   }
   function showRedAlert(data,redSugar,redBP,criticalSugar=false){
@@ -777,7 +777,8 @@
     $("#doneCount").textContent=completedVisits.length.toLocaleString("th-TH");
     document.querySelectorAll(".queue-tab").forEach(btn=>btn.classList.toggle("active",btn.dataset.queue===queueMode));
     $("#queueHint").textContent=queueMode==="pending"?`รายชื่อที่ยังไม่มีผลบันทึกในเดือน ${monthLabel(queueMonth)}`:queueMode==="done"?`ผู้ป่วยที่บันทึกแล้วในเดือน ${monthLabel(queueMonth)} · แสดงผลล่าสุดรายละ 1 รายการ`:"แสดงข้อมูลทั้งหมด";
-    const source=queueMode==="pending"?masters.filter(r=>!doneKeys.has(patientQueueKey(r))):queueMode==="done"?completedVisits:records;
+    const viewerVisits=records.filter(r=>r._sheet!=="รวม"&&(!m||String(r._sheet||"")===m));
+    const source=queueMode==="pending"?masters.filter(r=>!doneKeys.has(patientQueueKey(r))):queueMode==="done"?completedVisits:auth?.role==="viewer"?(m==="รวม"?masters:latestByHN(viewerVisits)):records;
     filtered=source.filter(r=>{
       const hay=[r.hn,r.firstName,r.lastName,r.houseNo,r.village].join(" ").toLowerCase();
       const monthOK=queueMode!=="all"||!m||String(r._sheet||"")===m;
@@ -1207,7 +1208,8 @@ ${worksheet("สรุปค่าน้ำตาล",summaryTable("sugar"))}${w
     $("#referralCard").style.display=["admin","viewer","staff","demo"].includes(profile.role)?"block":"none";
     $("#newReferralBtn").style.display=profile.role==="admin"?"inline-flex":"none";
     $("#referralExportBtn").style.display=["admin","demo"].includes(profile.role)?"inline-flex":"none";
-    $("#exportBtn").style.display=["viewer","staff"].includes(profile.role)?"none":"inline-flex";
+    $("#exportBtn").style.display=profile.role==="staff"?"none":"inline-flex";
+    $("#exportBtn").textContent=profile.role==="viewer"?"🖨 ดาวน์โหลดเพื่อพิมพ์รายการคัดกรอง":"⇩ ดาวน์โหลด Excel";
     $("#summaryExportBtn").style.display=["viewer","staff"].includes(profile.role)?"none":"inline-flex";
     $("#patientToolbar").style.display=profile.role==="village"?"none":"";
     queueMode=profile.role==="viewer"?"all":"pending";
