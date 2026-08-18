@@ -461,10 +461,10 @@
 
 <script>
   const GAS_URL = "https://script.google.com/macros/s/AKfycbx9y2f2fVFf2dGYV1LDuC9xISrqghO0vDg0PZjLE5ILkN0Nxf6utz3gAKCqqkIdoMt2/exec";
-  const REQUIRED_API_VERSION = 22;
+  const REQUIRED_API_VERSION = 23;
   const PAGE_SIZE = 20;
   const fields = ["recordDate","hn","firstName","lastName","birthDate","age","phone","houseNo","village","weight","height","waist","bp1","bp2","pulse","bloodSugar","appointmentDate","medicationAt","dm","ht","oldCva","hyperlipidaemia","ckdStage"];
-  let records = [], filtered = [], dashboardData = [], referrals = [], currentMonthlySugar = [], currentMonthlyBP = [], publicSummary = {}, page = 1, editing = null, deleting = null, auth = null, formMode = "basic", loadPromise = null, queueMode = "all";
+  let records = [], filtered = [], dashboardData = [], referrals = [], activeReferralHNs = [], currentMonthlySugar = [], currentMonthlyBP = [], publicSummary = {}, page = 1, editing = null, deleting = null, auth = null, formMode = "basic", loadPromise = null, queueMode = "all";
 
   const $ = (s) => document.querySelector(s);
   const storageGet = key => { try{return sessionStorage.getItem(key)||""}catch{return ""} };
@@ -678,7 +678,7 @@
     try{
       const result=await api("summary");
       publicSummary=result.summary||{};preferenceSet(PUBLIC_SUMMARY_CACHE,JSON.stringify({savedAt:Date.now(),summary:publicSummary}));renderSummary(publicSummary);renderPublicPresentation(publicSummary);
-      if(Number(result.apiVersion||0)<REQUIRED_API_VERSION){setStatus("bad","ต้อง Deploy GAS เวอร์ชันใหม่");toast("กรุณา Deploy Code.gs เวอร์ชัน 22 เพื่อให้ข้อมูลหลังบันทึกแสดงทันที",true)}
+      if(Number(result.apiVersion||0)<REQUIRED_API_VERSION){setStatus("bad","ต้อง Deploy GAS เวอร์ชันใหม่");toast("กรุณา Deploy Code.gs เวอร์ชัน 23 เพื่อให้ผู้ป่วยที่กำลังส่งต่อออกจากรอบันทึก",true)}
       else setStatus("ok","ข้อมูลภาพรวมล่าสุด");
     }catch(err){
       setStatus("bad","โหลดภาพรวมไม่สำเร็จ");
@@ -737,6 +737,7 @@
       const result=listState.value,referralResult=referralState.status==="fulfilled"?referralState.value:{data:referrals};
       records = Array.isArray(result.data) ? result.data : [];
       referrals = Array.isArray(referralResult.data) ? referralResult.data : [];
+      activeReferralHNs = Array.isArray(result.activeReferralHNs) ? result.activeReferralHNs.map(String) : [...latestReferralByHN().values()].filter(r=>r.type==="ส่งต่อ").map(r=>String(r.hn));
       records = records.map((r,i)=>({...r,pulse:normalizePulse(r.pulse),_row:Number(r._row||r.row||i+5),_sheet:String(r._sheet||"รวม")}));
       records = hydrateMasterDemographics(records);
       // records includes both master patients and monthly visit rows.  The
@@ -771,14 +772,15 @@
     const q=$("#searchInput").value.trim().toLowerCase(), m=$("#monthFilter").value, v=$("#villageFilter").value, d=$("#diseaseFilter").value,from=$("#rangeFrom").value,to=$("#rangeTo").value;
     const queueDate=$("#queueDate").value||preferenceGet("dmht_record_date")||todayInput(),queueMonth=String(queueDate).slice(0,7);
     const monthVisits=records.filter(r=>{if(r._sheet==="รวม")return false;const visitMonth=/^\d{4}-\d{2}$/.test(String(r._sheet||""))?String(r._sheet):recordDateKey(r.recordDate).slice(0,7);return visitMonth===queueMonth});
-    const completedVisits=latestByHN(monthVisits),doneKeys=new Set(completedVisits.map(patientQueueKey));
+    const completedVisits=latestByHN(monthVisits),doneKeys=new Set(completedVisits.map(patientQueueKey)),activeReferralSet=new Set(activeReferralHNs.map(String));
     const masters=records.filter(r=>r._sheet==="รวม");
-    $("#pendingCount").textContent=masters.filter(r=>!doneKeys.has(patientQueueKey(r))).length.toLocaleString("th-TH");
+    const pendingPatients=masters.filter(r=>!doneKeys.has(patientQueueKey(r))&&!activeReferralSet.has(String(r.hn||"")));
+    $("#pendingCount").textContent=pendingPatients.length.toLocaleString("th-TH");
     $("#doneCount").textContent=completedVisits.length.toLocaleString("th-TH");
     document.querySelectorAll(".queue-tab").forEach(btn=>btn.classList.toggle("active",btn.dataset.queue===queueMode));
-    $("#queueHint").textContent=queueMode==="pending"?`รายชื่อที่ยังไม่มีผลบันทึกในเดือน ${monthLabel(queueMonth)}`:queueMode==="done"?`ผู้ป่วยที่บันทึกแล้วในเดือน ${monthLabel(queueMonth)} · แสดงผลล่าสุดรายละ 1 รายการ`:"แสดงข้อมูลทั้งหมด";
+    $("#queueHint").textContent=queueMode==="pending"?`รายชื่อที่ยังไม่มีผลบันทึกในเดือน ${monthLabel(queueMonth)} · ไม่รวมผู้ป่วยที่กำลังส่งต่อ`:queueMode==="done"?`ผู้ป่วยที่บันทึกแล้วในเดือน ${monthLabel(queueMonth)} · แสดงผลล่าสุดรายละ 1 รายการ`:"แสดงข้อมูลทั้งหมด";
     const viewerVisits=records.filter(r=>r._sheet!=="รวม"&&(!m||String(r._sheet||"")===m));
-    const source=queueMode==="pending"?masters.filter(r=>!doneKeys.has(patientQueueKey(r))):queueMode==="done"?completedVisits:auth?.role==="viewer"?(m==="รวม"?masters:latestByHN(viewerVisits)):records;
+    const source=queueMode==="pending"?pendingPatients:queueMode==="done"?completedVisits:auth?.role==="viewer"?(m==="รวม"?masters:latestByHN(viewerVisits)):records;
     filtered=source.filter(r=>{
       const hay=[r.hn,r.firstName,r.lastName,r.houseNo,r.village].join(" ").toLowerCase();
       const monthOK=queueMode!=="all"||!m||String(r._sheet||"")===m;
@@ -1219,7 +1221,7 @@ ${worksheet("สรุปค่าน้ำตาล",summaryTable("sugar"))}${w
     loadData();
   }
   function showLoggedOut() {
-    auth=null;records=[];filtered=[];dashboardData=[];referrals=[];storageRemove("dmht_token");
+    auth=null;records=[];filtered=[];dashboardData=[];referrals=[];activeReferralHNs=[];storageRemove("dmht_token");
     document.body.classList.remove("village-user");document.body.classList.add("public-mode");
     $("#dataCard").classList.remove("locked");$("#userChip").style.display="block";$("#userChip").textContent="โหมดนำเสนอ · ซ่อนข้อมูลผู้ป่วย";$("#loginBtn").textContent="เข้าสู่ระบบ";
     $("#visitQueue").classList.remove("show");
