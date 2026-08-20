@@ -230,11 +230,11 @@
 
     <section class="middle">
       <article class="card panel">
-        <div class="panel-head"><div><div class="panel-title">ระดับค่าน้ำตาล</div><div class="panel-sub">จำนวนผู้ป่วยแยกตามเกณฑ์สี</div></div></div>
+        <div class="panel-head"><div><div class="panel-title">ระดับค่าน้ำตาล</div><div class="panel-sub">เฉพาะผู้ป่วยเบาหวาน (DM) แยกตามเกณฑ์สี</div></div></div>
         <div class="color-grid" id="sugarColorSummary"></div>
       </article>
       <article class="card panel">
-        <div class="panel-head"><div><div class="panel-title">ระดับความดันโลหิต</div><div class="panel-sub">ใช้ครั้งที่ 2 หากมี มิฉะนั้นใช้ครั้งที่ 1</div></div></div>
+        <div class="panel-head"><div><div class="panel-title">ระดับความดันโลหิต</div><div class="panel-sub">เฉพาะผู้ป่วยความดันโลหิตสูง (HT) · ใช้ครั้งที่ 2 หากมี มิฉะนั้นใช้ครั้งที่ 1</div></div></div>
         <div class="color-grid" id="bpColorSummary"></div>
       </article>
     </section>
@@ -473,7 +473,7 @@
 
 <script>
   const GAS_URL = "https://script.google.com/macros/s/AKfycbx9y2f2fVFf2dGYV1LDuC9xISrqghO0vDg0PZjLE5ILkN0Nxf6utz3gAKCqqkIdoMt2/exec";
-  const REQUIRED_API_VERSION = 24;
+  const REQUIRED_API_VERSION = 25;
   const PAGE_SIZE = 20;
   const fields = ["recordDate","hn","firstName","lastName","birthDate","age","phone","houseNo","village","weight","height","waist","bp1","bp2","pulse","bloodSugar","appointmentDate","appointmentStatus","medicationAt","dm","ht","oldCva","hyperlipidaemia","ckdStage"];
   let records = [], filtered = [], dashboardData = [], referrals = [], activeReferralHNs = [], currentMonthlySugar = [], currentMonthlyBP = [], publicSummary = {}, page = 1, editing = null, deleting = null, auth = null, formMode = "basic", loadPromise = null, queueMode = "all";
@@ -692,7 +692,7 @@
     try{
       const result=await api("summary");
       publicSummary=result.summary||{};preferenceSet(PUBLIC_SUMMARY_CACHE,JSON.stringify({savedAt:Date.now(),summary:publicSummary}));renderSummary(publicSummary);renderPublicPresentation(publicSummary);
-      if(Number(result.apiVersion||0)<REQUIRED_API_VERSION){setStatus("bad","ต้อง Deploy GAS เวอร์ชันใหม่");toast("กรุณา Deploy Code.gs เวอร์ชัน 24 เพื่อใช้ระบบติดตามการมาตามนัด",true)}
+      if(Number(result.apiVersion||0)<REQUIRED_API_VERSION){setStatus("bad","ต้อง Deploy GAS เวอร์ชันใหม่");toast("กรุณา Deploy Code.gs เวอร์ชัน 25 เพื่อใช้การสรุปผลตามกลุ่มโรค",true)}
       else setStatus("ok","ข้อมูลภาพรวมล่าสุด");
     }catch(err){
       setStatus("bad","โหลดภาพรวมไม่สำเร็จ");
@@ -731,7 +731,7 @@
     $("#avgAge").textContent=s.avgAge!==null&&s.avgAge!==undefined?`เฉลี่ย ${s.avgAge} ปี`:"เฉลี่ย – ปี";
     const appointment=s.publicReport||{};$("#appointmentAttended").textContent=Number(appointment.appointmentAttended||0).toLocaleString("th-TH");$("#appointmentMissed").textContent=Number(appointment.appointmentMissed||0).toLocaleString("th-TH");$("#appointmentPending").textContent=Number(appointment.appointmentPending||0).toLocaleString("th-TH");$("#appointmentCoverage").textContent=Number(appointment.appointmentCoverage||0)+"%";$("#appointmentCoverageSub").textContent=`ข้อมูลภาพรวม ${s.summaryMonth?monthLabel(s.summaryMonth):"เดือนล่าสุด"} · ไม่แสดงข้อมูลส่วนบุคคล`;
     const publicScope=s.summaryMonth?`ข้อมูลภาพรวมเดือน ${monthLabel(s.summaryMonth)} · ไม่แสดงข้อมูลส่วนบุคคล`:"ข้อมูลภาพรวมเบื้องต้น · ไม่แสดงข้อมูลส่วนบุคคล";
-    $("#sugarDonutSub").textContent=publicScope;$("#bpDonutSub").textContent=publicScope;
+    $("#sugarDonutSub").textContent=`${publicScope} · เฉพาะผู้ป่วย DM`;$("#bpDonutSub").textContent=`${publicScope} · เฉพาะผู้ป่วย HT`;
     renderColorPanels(s.sugarLevels||{},s.bpLevels||{});
     currentMonthlySugar=Array.isArray(s.monthlySugar)?s.monthlySugar:[];currentMonthlyBP=Array.isArray(s.monthlyBP)?s.monthlyBP:[];renderDonutCharts(s.sugarLevels||{},s.bpLevels||{});renderMonthlySugarChart();if(!auth)renderPublicManagementReport(s);
   }
@@ -846,11 +846,11 @@
     dashboardData=selectedVisits;
     const appointment=appointmentMetrics(selectedVisits);$("#appointmentAttended").textContent=appointment.attended.toLocaleString("th-TH");$("#appointmentMissed").textContent=appointment.missed.toLocaleString("th-TH");$("#appointmentPending").textContent=appointment.pending.toLocaleString("th-TH");$("#appointmentCoverage").textContent=appointment.coverage+"%";$("#appointmentCoverageSub").textContent=`ประเมินแล้ว ${appointment.evaluated.toLocaleString("th-TH")} จาก ${selectedVisits.length.toLocaleString("th-TH")} ราย · มาตามนัด ${appointment.coverage}%`;
     const monthlyScope=from||to?`ข้อมูลช่วง ${from?formatThaiDate(from):"เริ่มต้น"} ถึง ${to?formatThaiDate(to):"ปัจจุบัน"} · ใช้ผลล่าสุดของผู้ป่วยแต่ละราย`:`ข้อมูลผู้ป่วยทั้งหมดในเดือน ${monthLabel(selectedMonth)} · ใช้ผลล่าสุดของผู้ป่วยแต่ละราย`;
-    $("#sugarDonutSub").textContent=monthlyScope;$("#bpDonutSub").textContent=monthlyScope;
+    $("#sugarDonutSub").textContent=`${monthlyScope} · เฉพาะผู้ป่วย DM`;$("#bpDonutSub").textContent=`${monthlyScope} · เฉพาะผู้ป่วย HT`;
     const sugarCounts={green:0,yellow:0,orange:0,red:0},bpCounts={green:0,yellow:0,orange:0,red:0};
-    selectedVisits.forEach(r=>{const s=sugarLevel(r.bloodSugar),b=bpLevel(r.bp2||r.bp1);if(sugarCounts[s]!==undefined)sugarCounts[s]++;if(bpCounts[b]!==undefined)bpCounts[b]++});
+    selectedVisits.forEach(r=>{const s=sugarLevel(r.bloodSugar),b=bpLevel(r.bp2||r.bp1);if(isYes(r.dm)&&sugarCounts[s]!==undefined)sugarCounts[s]++;if(isYes(r.ht)&&bpCounts[b]!==undefined)bpCounts[b]++});
     renderColorPanels(sugarCounts,bpCounts);
-    const monthly={},monthlyBP={};data.forEach(r=>{const m=/^\d{4}-\d{2}$/.test(String(r._sheet||""))?String(r._sheet):String(r.recordDate||"").slice(0,7);if(!/^\d{4}-\d{2}$/.test(m))return;if(!monthly[m])monthly[m]={green:0,yellow:0,orange:0,red:0,none:0};if(!monthlyBP[m])monthlyBP[m]={green:0,yellow:0,orange:0,red:0,none:0};monthly[m][sugarLevel(r.bloodSugar)]++;monthlyBP[m][bpLevel(r.bp2||r.bp1)]++});currentMonthlySugar=Object.entries(monthly).sort((a,b)=>a[0].localeCompare(b[0])).map(([month,levels])=>({month,levels}));currentMonthlyBP=Object.entries(monthlyBP).sort((a,b)=>a[0].localeCompare(b[0])).map(([month,levels])=>({month,levels}));renderDonutCharts(sugarCounts,bpCounts);renderMonthlySugarChart();
+    const monthly={},monthlyBP={};data.forEach(r=>{const m=/^\d{4}-\d{2}$/.test(String(r._sheet||""))?String(r._sheet):String(r.recordDate||"").slice(0,7);if(!/^\d{4}-\d{2}$/.test(m))return;if(!monthly[m])monthly[m]={green:0,yellow:0,orange:0,red:0,none:0};if(!monthlyBP[m])monthlyBP[m]={green:0,yellow:0,orange:0,red:0,none:0};if(isYes(r.dm))monthly[m][sugarLevel(r.bloodSugar)]++;if(isYes(r.ht))monthlyBP[m][bpLevel(r.bp2||r.bp1)]++});currentMonthlySugar=Object.entries(monthly).sort((a,b)=>a[0].localeCompare(b[0])).map(([month,levels])=>({month,levels}));currentMonthlyBP=Object.entries(monthlyBP).sort((a,b)=>a[0].localeCompare(b[0])).map(([month,levels])=>({month,levels}));renderDonutCharts(sugarCounts,bpCounts);renderMonthlySugarChart();
   }
 
   function renderDonut(target,totalTarget,legendTarget,counts){
@@ -863,7 +863,7 @@
     const select=$("#sugarChartMonth"),current=select.value;
     const isBP=$("#trendMetric").value==="bp",metricName=isBP?"ความดันโลหิต":"น้ำตาล";
     const allRows=[...(isBP?currentMonthlyBP:currentMonthlySugar)].filter(x=>x?.month).sort((a,b)=>a.month.localeCompare(b.month));
-    $("#monthlyTrendTitle").textContent=`แนวโน้มสัดส่วนค่า${metricName}รายเดือน`;
+    $("#monthlyTrendTitle").textContent=`แนวโน้มสัดส่วนค่า${metricName}${isBP?"ของผู้ป่วย HT":"ของผู้ป่วย DM"} รายเดือน`;
     $("#monthlyTrendLegend").innerHTML=isBP?'<span>🟢 เขียว ≤139/89</span><span>🟡 เหลือง 140/90–159/99</span><span>🟠 ส้ม 160/100–179/109</span><span>🔴 แดง ≥180/110</span>':'<span>🟢 เขียว 60–125</span><span>🟡 เหลือง 126–154</span><span>🟠 ส้ม 155–182</span><span>🔴 แดง &lt;60 หรือ ≥183</span><span>🔴🔴 วิกฤต &lt;60 หรือ &gt;250</span>';
     const months=allRows.map(x=>x.month).sort().reverse();
     select.innerHTML='<option value="">เทียบทุกเดือน</option>'+months.map(m=>`<option value="${m}">${monthLabel(m)}</option>`).join("");
@@ -916,7 +916,7 @@
     const latest=latestByHN(period),today=new Date(todayInput()+"T00:00:00");
     const validDM=latest.filter(r=>isYes(r.dm)&&sugarLevel(r.bloodSugar)!=="none"),controlledDM=validDM.filter(r=>sugarLevel(r.bloodSugar)==="green");
     const validHT=latest.filter(r=>isYes(r.ht)&&bpLevel(r.bp2||r.bp1)!=="none"),controlledHT=validHT.filter(r=>bpLevel(r.bp2||r.bp1)==="green");
-    const red=latest.filter(r=>sugarLevel(r.bloodSugar)==="red"||bpLevel(r.bp2||r.bp1)==="red");
+    const red=latest.filter(r=>(isYes(r.dm)&&sugarLevel(r.bloodSugar)==="red")||(isYes(r.ht)&&bpLevel(r.bp2||r.bp1)==="red"));
     const appointment=appointmentMetrics(latest);
     const overdue=latest.filter(r=>{const d=new Date(String(r.appointmentDate||"")+"T00:00:00");return !Number.isNaN(d.getTime())&&d<today});
     const important=["recordDate","hn","firstName","lastName","birthDate","phone","village","weight","height","waist","bp1","pulse","bloodSugar","appointmentDate"],complete=latest.filter(r=>important.every(k=>String(r[k]??"").trim())).length;
@@ -925,8 +925,8 @@
     $("#mgPatients").textContent=latest.length.toLocaleString("th-TH");$("#mgVisits").textContent=`${actualVisits.length.toLocaleString("th-TH")} ครั้งตรวจ`;
     $("#mgControlledDM").textContent=(validDM.length?Math.round(controlledDM.length/validDM.length*100):0)+"%";$("#mgControlledHT").textContent=(validHT.length?Math.round(controlledHT.length/validHT.length*100):0)+"%";$("#mgRed").textContent=red.length.toLocaleString("th-TH");$("#mgOverdue").textContent=overdue.length.toLocaleString("th-TH");$("#mgAppointmentCoverage").textContent=appointment.coverage+"%";$("#mgAppointmentDetail").textContent=`มาตามนัด ${appointment.attended.toLocaleString("th-TH")} · ไม่มาตามนัด ${appointment.missed.toLocaleString("th-TH")}`;$("#mgComplete").textContent=(latest.length?Math.round(complete/latest.length*100):0)+"%";$("#mgComorbid").textContent=comorbid.length.toLocaleString("th-TH");$("#mgElderly").textContent=elderly.length.toLocaleString("th-TH");
     if(["admin","viewer","staff","demo"].includes(auth?.role)){$("#mgReferrals").textContent=refPeriod.filter(r=>r.type==="ส่งต่อ").length.toLocaleString("th-TH");$("#mgReferralCurrent").textContent=`กำลังส่งต่อ ${currentRefs.length.toLocaleString("th-TH")} ราย`}else{$("#mgReferrals").textContent="–";$("#mgReferralCurrent").textContent="ไม่มีสิทธิ์ดูข้อมูลส่งต่อ"}
-    const trendSource=records.filter(r=>!village||String(r.village||"")===village),trend={};trendSource.forEach(r=>{const m=/^\d{4}-\d{2}$/.test(String(r._sheet||""))?String(r._sheet):String(r.recordDate||"").slice(0,7);if(/^\d{4}-\d{2}$/.test(m)){if(!trend[m])trend[m]={total:0,red:0};trend[m].total++;if(sugarLevel(r.bloodSugar)==="red"||bpLevel(r.bp2||r.bp1)==="red")trend[m].red++}});renderMiniBars("#mgTrend",Object.entries(trend).sort((a,b)=>a[0].localeCompare(b[0])).slice(-6).map(([m,x])=>({label:`${monthLabel(m)} · แดง ${x.red}`,value:x.total,color:x.red?"#d97706":"#0f766e"})));
-    const vg={};latest.forEach(r=>{const v=String(r.village||"ไม่ระบุ");if(!vg[v])vg[v]={total:0,red:0};vg[v].total++;if(sugarLevel(r.bloodSugar)==="red"||bpLevel(r.bp2||r.bp1)==="red")vg[v].red++});renderMiniBars("#mgVillages",Object.entries(vg).sort((a,b)=>b[1].total-a[1].total).map(([v,x])=>({label:`หมู่ ${v} · แดง ${x.red}`,value:x.total,color:x.red?"#d97706":"#0f766e"})));
+    const trendSource=records.filter(r=>!village||String(r.village||"")===village),trend={};trendSource.forEach(r=>{const m=/^\d{4}-\d{2}$/.test(String(r._sheet||""))?String(r._sheet):String(r.recordDate||"").slice(0,7);if(/^\d{4}-\d{2}$/.test(m)){if(!trend[m])trend[m]={total:0,red:0};trend[m].total++;if((isYes(r.dm)&&sugarLevel(r.bloodSugar)==="red")||(isYes(r.ht)&&bpLevel(r.bp2||r.bp1)==="red"))trend[m].red++}});renderMiniBars("#mgTrend",Object.entries(trend).sort((a,b)=>a[0].localeCompare(b[0])).slice(-6).map(([m,x])=>({label:`${monthLabel(m)} · แดง ${x.red}`,value:x.total,color:x.red?"#d97706":"#0f766e"})));
+    const vg={};latest.forEach(r=>{const v=String(r.village||"ไม่ระบุ");if(!vg[v])vg[v]={total:0,red:0};vg[v].total++;if((isYes(r.dm)&&sugarLevel(r.bloodSugar)==="red")||(isYes(r.ht)&&bpLevel(r.bp2||r.bp1)==="red"))vg[v].red++});renderMiniBars("#mgVillages",Object.entries(vg).sort((a,b)=>b[1].total-a[1].total).map(([v,x])=>({label:`หมู่ ${v} · แดง ${x.red}`,value:x.total,color:x.red?"#d97706":"#0f766e"})));
     const diseases=[{label:"DM",value:latest.filter(r=>isYes(r.dm)).length},{label:"HT",value:latest.filter(r=>isYes(r.ht)).length},{label:"Old CVA",value:latest.filter(r=>isYes(r.oldCva)).length},{label:"Hyperlipidaemia",value:latest.filter(r=>isYes(r.hyperlipidaemia)).length},{label:"CKD 3–5",value:latest.filter(r=>Number(r.ckdStage)>=3).length}];renderMiniBars("#mgDiseases",diseases);
     const dmControlPct=validDM.length?Math.round(controlledDM.length/validDM.length*100):0,htControlPct=validHT.length?Math.round(controlledHT.length/validHT.length*100):0,controlPct=Math.min(dmControlPct,htControlPct),completePct=latest.length?Math.round(complete/latest.length*100):0,recs=[];
     const redPct=latest.length?Math.round(red.length/latest.length*100):0,elderlyPct=latest.length?Math.round(elderly.length/latest.length*100):0;
@@ -936,7 +936,7 @@
     const riskAnalysis=red.length?`พบกลุ่มสีแดง ${red.length} ราย คิดเป็นร้อยละ ${redPct} ของผู้ป่วยในขอบเขตรายงาน ต้องจัดลำดับติดตามและประเมินซ้ำ`:`ไม่พบผู้ป่วยเข้าเกณฑ์สีแดงในขอบเขตรายงาน`;
     $("#mgExecutiveSummary").innerHTML=`<p><strong>ภาพรวม ${esc(scopeText)}</strong> มีผู้ป่วยทั้งหมด ${latest.length.toLocaleString("th-TH")} ราย และมีการบันทึกผลตรวจจริง ${actualVisits.length.toLocaleString("th-TH")} ครั้ง ${esc(controlAnalysis)} โดย${esc(riskAnalysis)}</p><p>ด้านความต่อเนื่องของบริการ ผู้ป่วยมาตามนัด ${appointment.attended.toLocaleString("th-TH")} ราย ไม่มาตามนัด ${appointment.missed.toLocaleString("th-TH")} ราย คิดเป็นความครอบคลุมร้อยละ ${appointment.coverage} (จากผู้ที่ประเมินแล้ว ${appointment.evaluated.toLocaleString("th-TH")} ราย) พบผู้ป่วยนัดเกินกำหนด ${overdue.length.toLocaleString("th-TH")} ราย กลุ่มโรคร่วมเสี่ยงสูง ${comorbid.length.toLocaleString("th-TH")} ราย และผู้สูงอายุ ${elderly.length.toLocaleString("th-TH")} ราย (ร้อยละ ${elderlyPct}) ความครบถ้วนของข้อมูลสำคัญอยู่ที่ร้อยละ ${completePct}</p><div class="executive-points"><div class="executive-point"><span>ผลตรวจจริง</span><strong>${actualVisits.length.toLocaleString("th-TH")} ครั้ง</strong></div><div class="executive-point"><span>ควบคุม DM ได้</span><strong>${dmControlPct}%</strong></div><div class="executive-point"><span>ควบคุม HT ได้</span><strong>${htControlPct}%</strong></div><div class="executive-point"><span>มาตามนัด</span><strong>${appointment.coverage}%</strong></div><div class="executive-point"><span>กลุ่มเร่งด่วนสีแดง</span><strong>${red.length.toLocaleString("th-TH")} ราย (${redPct}%)</strong></div><div class="executive-point"><span>ข้อมูลสำคัญครบถ้วน</span><strong>${completePct}%</strong></div></div>`;
     if(red.length)recs.push({c:"urgent",t:`เร่งติดตามกลุ่มสีแดง ${red.length} ราย พิจารณาประเมินซ้ำและส่งต่อตามข้อบ่งชี้`});if(appointment.missed)recs.push({c:"urgent",t:`ติดตามผู้ป่วยไม่มาตามนัด ${appointment.missed} ราย และบันทึกผลการติดตาม`});if(appointment.pending)recs.push({c:"warn",t:`ยังไม่ประเมินการมาตามนัด ${appointment.pending} ราย ควรตรวจสอบให้ครบถ้วน`});if(overdue.length)recs.push({c:"warn",t:`จัดทำ call list ติดตามผู้ป่วยนัดเกินกำหนด ${overdue.length} ราย`});if(controlPct<70)recs.push({c:"warn",t:`อัตราควบคุมได้ ${controlPct}% ควรทบทวนแผนยา อาหาร และการติดตามกลุ่มเสี่ยง`});if(completePct<90)recs.push({c:"",t:`ข้อมูลครบถ้วน ${completePct}% ควรเร่งเติมวันเกิด เบอร์โทร และตัวชี้วัดจำเป็น`});if(!recs.length)recs.push({c:"",t:"ภาพรวมอยู่ในเกณฑ์ดี ควรรักษาความต่อเนื่องของการติดตาม"});$("#mgRecommendations").innerHTML=recs.map(x=>`<div class="recommendation ${x.c}">${esc(x.t)}</div>`).join("");
-    const priority=latest.map(r=>{const reasons=[];if(sugarLevel(r.bloodSugar)==="red")reasons.push("น้ำตาลสีแดง");if(bpLevel(r.bp2||r.bp1)==="red")reasons.push("ความดันสีแดง");if(overdue.includes(r))reasons.push("เกินวันนัด");if(isYes(r.oldCva)||Number(r.ckdStage)>=3)reasons.push("โรคร่วมเสี่ยงสูง");return {r,reasons}}).filter(x=>x.reasons.length).sort((a,b)=>b.reasons.length-a.reasons.length).slice(0,50);
+    const priority=latest.map(r=>{const reasons=[];if(isYes(r.dm)&&sugarLevel(r.bloodSugar)==="red")reasons.push("น้ำตาลสีแดง");if(isYes(r.ht)&&bpLevel(r.bp2||r.bp1)==="red")reasons.push("ความดันสีแดง");if(overdue.includes(r))reasons.push("เกินวันนัด");if(isYes(r.oldCva)||Number(r.ckdStage)>=3)reasons.push("โรคร่วมเสี่ยงสูง");return {r,reasons}}).filter(x=>x.reasons.length).sort((a,b)=>b.reasons.length-a.reasons.length).slice(0,50);
     $("#mgPriorityBody").innerHTML=priority.length?priority.map((x,i)=>`<tr><td>${i+1}</td><td><strong>${fmt(x.r.hn)}</strong></td><td class="name">${fmt(x.r.firstName)} ${fmt(x.r.lastName)}</td><td>${fmt(x.r.village)}</td><td>${x.r.bloodSugar!==""?levelBadge(sugarLevel(x.r.bloodSugar),x.r.bloodSugar):"–"}</td><td>${x.r.bp1?levelBadge(bpLevel(x.r.bp2||x.r.bp1),x.r.bp2||x.r.bp1):"–"}</td><td>${formatThaiDate(x.r.appointmentDate)}</td><td>${esc(x.reasons.join(", "))}</td></tr>`).join(""):'<tr><td colspan="8"><div class="empty">ไม่พบผู้ป่วยที่ต้องเร่งรัดในช่วงที่เลือก</div></td></tr>';
   }
 
@@ -954,7 +954,7 @@
       return;
     }
     const isSugar=type==="sugar";
-    const matches=dashboardData.filter(r=>isSugar?sugarLevel(r.bloodSugar)===level:bpLevel(r.bp2||r.bp1)===level);
+    const matches=dashboardData.filter(r=>isSugar?(isYes(r.dm)&&sugarLevel(r.bloodSugar)===level):(isYes(r.ht)&&bpLevel(r.bp2||r.bp1)===level));
     $("#colorPatientsTitle").textContent=`${isSugar?"ค่าน้ำตาล":"ความดันโลหิต"} ระดับสี${levelMeta[level].label}`;
     $("#colorPatientsSub").textContent=`พบ ${matches.length.toLocaleString("th-TH")} ราย · ตามตัวกรองปัจจุบัน`;
     $("#colorValueHeader").textContent=isSugar?"ค่าน้ำตาล (mg/dL)":"ค่าความดัน";
@@ -1009,7 +1009,7 @@
     const headers=["ลำดับ","เดือน","หมู่","HN","ชื่อ","สกุล","วันเกิด (พ.ศ.)","เบอร์โทร","วันที่บันทึก","น้ำหนัก","ส่วนสูง","BMI","รอบเอว","ความดันครั้งที่ 1","ความดันครั้งที่ 2","ชีพจร","น้ำตาล","ระดับน้ำตาล","ระดับความดัน","วันนัดครั้งต่อไป","การมาพบแพทย์ตามนัด","ผลการลงบันทึก"];
     const levelStyle=level=>({green:"Green",yellow:"Yellow",orange:"Orange",red:"Red"}[level]||"");
     const cell=(value,style="",type="String")=>`<Cell${style?` ss:StyleID="${style}"`:""}><Data ss:Type="${type}">${xe(value)}</Data></Cell>`;
-    const detailRows=rows.map((x,i)=>{const p=x.patient,v=x.visit,sStyle=v?levelStyle(sugarLevel(v.bloodSugar)):"",bStyle=v?levelStyle(bpLevel(v.bp2||v.bp1)):"",values=[i+1,monthLabel(month),p.village,p.hn,p.firstName,p.lastName,birthDateBE(p.birthDate),p.phone,v?formatThaiDate(v.recordDate):"",v?.weight||"",v?.height||"",v?calculateBMI(v.weight,v.height):"",v?.waist||"",v?.bp1||"",v?.bp2||"",v?.pulse||"",v?.bloodSugar||"",v?levelMeta[sugarLevel(v.bloodSugar)].label:"",v?levelMeta[bpLevel(v.bp2||v.bp1)].label:"",v?formatThaiDate(v.appointmentDate):"",v?.appointmentStatus||"ยังไม่ประเมิน",v?"บันทึกแล้ว":"ยังไม่บันทึก"],styles=values.map(()=>"");styles[13]=bStyle;styles[14]=bStyle;styles[16]=sStyle;styles[17]=sStyle;styles[18]=bStyle;styles[21]=v?"Recorded":"Missing";return `<Row ss:AutoFitHeight="1">${values.map((value,j)=>{const numericPulse=j===15&&String(value).trim()!==""&&Number.isFinite(Number(value));return cell(numericPulse?Number(value):value,styles[j],numericPulse?"Number":"String")}).join("")}</Row>`}).join("");
+    const detailRows=rows.map((x,i)=>{const p=x.patient,v=x.visit,isDM=isYes(v?.dm??p.dm),isHT=isYes(v?.ht??p.ht),sStyle=v&&isDM?levelStyle(sugarLevel(v.bloodSugar)):"",bStyle=v&&isHT?levelStyle(bpLevel(v.bp2||v.bp1)):"",values=[i+1,monthLabel(month),p.village,p.hn,p.firstName,p.lastName,birthDateBE(p.birthDate),p.phone,v?formatThaiDate(v.recordDate):"",v?.weight||"",v?.height||"",v?calculateBMI(v.weight,v.height):"",v?.waist||"",v?.bp1||"",v?.bp2||"",v?.pulse||"",v?.bloodSugar||"",v&&isDM?levelMeta[sugarLevel(v.bloodSugar)].label:"",v&&isHT?levelMeta[bpLevel(v.bp2||v.bp1)].label:"",v?formatThaiDate(v.appointmentDate):"",v?.appointmentStatus||"ยังไม่ประเมิน",v?"บันทึกแล้ว":"ยังไม่บันทึก"],styles=values.map(()=>"");styles[13]=bStyle;styles[14]=bStyle;styles[16]=sStyle;styles[17]=sStyle;styles[18]=bStyle;styles[21]=v?"Recorded":"Missing";return `<Row ss:AutoFitHeight="1">${values.map((value,j)=>{const numericPulse=j===15&&String(value).trim()!==""&&Number.isFinite(Number(value));return cell(numericPulse?Number(value):value,styles[j],numericPulse?"Number":"String")}).join("")}</Row>`}).join("");
     const widths=[34,78,38,62,92,92,82,82,78,48,48,48,48,75,75,48,56,64,66,82,88,76];
     const styles=`<Styles><Style ss:ID="Default"><Font ss:FontName="TH SarabunPSK" ss:Size="15"/><Alignment ss:Vertical="Center" ss:WrapText="1"/><Borders><Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#D7E4E1"/><Border ss:Position="Left" ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#D7E4E1"/><Border ss:Position="Right" ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#D7E4E1"/><Border ss:Position="Top" ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#D7E4E1"/></Borders></Style><Style ss:ID="Title"><Font ss:FontName="TH SarabunPSK" ss:Size="18" ss:Bold="1" ss:Color="#FFFFFF"/><Interior ss:Color="#0F766E" ss:Pattern="Solid"/><Alignment ss:Horizontal="Center" ss:Vertical="Center"/></Style><Style ss:ID="Summary"><Font ss:FontName="TH SarabunPSK" ss:Size="15" ss:Bold="1"/><Interior ss:Color="#E8F5F2" ss:Pattern="Solid"/><Alignment ss:Horizontal="Left"/></Style><Style ss:ID="Header"><Font ss:FontName="TH SarabunPSK" ss:Size="15" ss:Bold="1" ss:Color="#FFFFFF"/><Interior ss:Color="#0F766E" ss:Pattern="Solid"/><Alignment ss:Horizontal="Center" ss:Vertical="Center" ss:WrapText="1"/></Style><Style ss:ID="Green"><Interior ss:Color="#DCFCE7" ss:Pattern="Solid"/><Font ss:FontName="TH SarabunPSK" ss:Size="15" ss:Color="#166534" ss:Bold="1"/></Style><Style ss:ID="Yellow"><Interior ss:Color="#FEF9C3" ss:Pattern="Solid"/><Font ss:FontName="TH SarabunPSK" ss:Size="15" ss:Color="#854D0E" ss:Bold="1"/></Style><Style ss:ID="Orange"><Interior ss:Color="#FFEDD5" ss:Pattern="Solid"/><Font ss:FontName="TH SarabunPSK" ss:Size="15" ss:Color="#9A3412" ss:Bold="1"/></Style><Style ss:ID="Red"><Interior ss:Color="#FEE2E2" ss:Pattern="Solid"/><Font ss:FontName="TH SarabunPSK" ss:Size="15" ss:Color="#991B1B" ss:Bold="1"/></Style><Style ss:ID="Recorded"><Interior ss:Color="#DCFCE7" ss:Pattern="Solid"/><Font ss:FontName="TH SarabunPSK" ss:Size="15" ss:Color="#166534" ss:Bold="1"/></Style><Style ss:ID="Missing"><Interior ss:Color="#FEE2E2" ss:Pattern="Solid"/><Font ss:FontName="TH SarabunPSK" ss:Size="15" ss:Color="#991B1B" ss:Bold="1"/></Style></Styles>`;
     const recorded=allRows.filter(x=>x.visit).length,summary=`${monthLabel(month)} · ${village?`หมู่ ${village}`:"ทุกหมู่บ้าน"} · ผู้ป่วยทั้งหมด ${allRows.length} คน · ตรวจแล้ว ${recorded} คน · ยังไม่ตรวจ ${allRows.length-recorded} คน · รายการที่ดาวน์โหลด: ${statusLabel} ${rows.length} คน`;
@@ -1059,21 +1059,21 @@
       const month=/^\d{4}-\d{2}$/.test(r._sheet)?r._sheet:"ข้อมูลเดิม";
       const village=String(r.village||"ไม่ระบุ");
       const key=month+"|"+village;
-      if(!grouped[key]) grouped[key]={month,village,total:0,sugar:{green:0,yellow:0,orange:0,red:0,none:0},bp:{green:0,yellow:0,orange:0,red:0,none:0}};
+      if(!grouped[key]) grouped[key]={month,village,total:0,sugarTotal:0,bpTotal:0,sugar:{green:0,yellow:0,orange:0,red:0,none:0},bp:{green:0,yellow:0,orange:0,red:0,none:0}};
       grouped[key].total++;
-      grouped[key].sugar[sugarLevel(r.bloodSugar)]++;
-      grouped[key].bp[bpLevel(r.bp2||r.bp1)]++;
+      if(isYes(r.dm)){grouped[key].sugar[sugarLevel(r.bloodSugar)]++;grouped[key].sugarTotal++}
+      if(isYes(r.ht)){grouped[key].bp[bpLevel(r.bp2||r.bp1)]++;grouped[key].bpTotal++}
     });
     const groups=Object.values(grouped).sort((a,b)=>a.month.localeCompare(b.month)||Number(a.village)-Number(b.village));
     const summaryTable=type=>[
       ["เดือนที่ลงข้อมูล","หมู่บ้าน","สีเขียว","สีเหลือง","สีส้ม","สีแดง","ไม่มีข้อมูล","รวม"],
-      ...groups.map(g=>[g.month,g.village,...levels.map(l=>g[type][l]),g.total])
+      ...groups.map(g=>[g.month,g.village,...levels.map(l=>g[type][l]),g[type+"Total"]])
     ];
     const rawTable=[
       ["วันที่ลงข้อมูล","เดือน","หมู่","HN","ชื่อ","สกุล","วันเกิด (พ.ศ.)","อายุ","เบอร์โทร","น้ำตาล","ระดับน้ำตาล","ความดันที่ใช้สรุป","ระดับความดัน","DM","HT","Old CVA","Hyperlipidaemia","CKD ระยะ"],
       ...filtered.map(r=>[
         r.recordDate,r._sheet,r.village,r.hn,r.firstName,r.lastName,birthDateBE(r.birthDate),r.age,r.phone,
-        r.bloodSugar,levelMeta[sugarLevel(r.bloodSugar)].label,r.bp2||r.bp1,levelMeta[bpLevel(r.bp2||r.bp1)].label,
+        r.bloodSugar,isYes(r.dm)?levelMeta[sugarLevel(r.bloodSugar)].label:"ไม่อยู่ในกลุ่ม DM",r.bp2||r.bp1,isYes(r.ht)?levelMeta[bpLevel(r.bp2||r.bp1)].label:"ไม่อยู่ในกลุ่ม HT",
         r.dm,r.ht,r.oldCva,r.hyperlipidaemia,r.ckdStage
       ])
     ];
