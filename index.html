@@ -356,12 +356,12 @@
 </div>
 
 <div class="overlay" id="loginOverlay" role="dialog" aria-modal="true" aria-labelledby="loginTitle">
-  <form class="modal" id="loginForm" style="width:min(430px,100%)">
+  <form class="modal" id="loginForm" style="width:min(430px,100%)" autocomplete="off" data-lpignore="true" data-1p-ignore="true">
     <div class="modal-head"><div><div class="modal-title" id="loginTitle">เข้าสู่ระบบ</div><div class="panel-sub">ระบบทะเบียนผู้ป่วย DM–HT</div></div><button type="button" class="close" data-login-close>×</button></div>
     <div class="form-body">
       <div class="form-grid" style="grid-template-columns:1fr">
-        <div class="field"><label>ชื่อผู้ใช้</label><input name="username" autocomplete="username" required></div>
-        <div class="field"><label>รหัสผ่าน</label><input name="password" type="password" autocomplete="current-password" required></div>
+        <div class="field"><label>ชื่อผู้ใช้</label><input name="username" autocomplete="off" autocapitalize="none" spellcheck="false" data-lpignore="true" data-1p-ignore="true" required></div>
+        <div class="field"><label>รหัสผ่าน</label><input name="password" type="password" autocomplete="new-password" data-lpignore="true" data-1p-ignore="true" required></div>
       </div>
       <div class="panel-sub">ผู้ใช้รายหมู่จะเห็นเฉพาะผู้ป่วยในหมู่บ้านที่รับผิดชอบ</div>
     </div>
@@ -369,7 +369,7 @@
   </form>
 </div>
 <div class="overlay" id="passwordOverlay" role="dialog" aria-modal="true" aria-labelledby="passwordTitle">
-  <form class="modal" id="passwordForm" style="width:min(460px,100%)"><div class="modal-head"><div><div class="modal-title" id="passwordTitle">เปลี่ยนรหัสผ่าน Admin</div><div class="panel-sub">หลังเปลี่ยนจะต้องเข้าสู่ระบบใหม่ทุกอุปกรณ์</div></div><button type="button" class="close" data-password-close>×</button></div>
+  <form class="modal" id="passwordForm" style="width:min(460px,100%)" autocomplete="off" data-lpignore="true" data-1p-ignore="true"><div class="modal-head"><div><div class="modal-title" id="passwordTitle">เปลี่ยนรหัสผ่าน Admin</div><div class="panel-sub">หลังเปลี่ยนจะต้องเข้าสู่ระบบใหม่ทุกอุปกรณ์</div></div><button type="button" class="close" data-password-close>×</button></div>
   <div class="form-body"><div class="form-grid" style="grid-template-columns:1fr"><div class="field"><label>รหัสผ่านปัจจุบัน <span class="required-star">*</span></label><input name="currentPassword" type="password" autocomplete="current-password" required></div><div class="field"><label>รหัสผ่านใหม่ <span class="required-star">*</span></label><input name="newPassword" type="password" autocomplete="new-password" minlength="8" required><div class="panel-sub">อย่างน้อย 8 ตัว และมีทั้งตัวอักษรกับตัวเลข</div></div><div class="field"><label>ยืนยันรหัสผ่านใหม่ <span class="required-star">*</span></label><input name="confirmPassword" type="password" autocomplete="new-password" minlength="8" required></div></div></div>
   <div class="modal-foot"><button type="button" class="btn btn-ghost" data-password-close>ยกเลิก</button><button type="submit" class="btn btn-primary" id="savePasswordBtn">เปลี่ยนรหัสผ่าน</button></div></form>
 </div>
@@ -485,6 +485,24 @@
   const preferenceGet = key => { try{return localStorage.getItem(key)||""}catch{return ""} };
   const preferenceSet = (key,value) => { try{localStorage.setItem(key,value)}catch{} };
   const PUBLIC_SUMMARY_CACHE="dmht_public_summary_v1";
+  let exitLogoutSent=false;
+  function sendServerLogout(token){
+    const clean=String(token||"").trim();if(!clean)return;
+    const body=JSON.stringify({action:"logout",token:clean});
+    try{
+      if(navigator.sendBeacon){
+        const queued=navigator.sendBeacon(GAS_URL,new Blob([body],{type:"text/plain;charset=UTF-8"}));
+        if(queued)return;
+      }
+    }catch{}
+    try{fetch(GAS_URL,{method:"POST",mode:"no-cors",cache:"no-store",keepalive:true,headers:{"Content-Type":"text/plain;charset=UTF-8"},body})}catch{}
+  }
+  function secureLogoutOnExit(){
+    const token=auth?.token||storageGet("dmht_token");
+    auth=null;storageRemove("dmht_token");
+    try{$("#loginForm")?.reset()}catch{}
+    if(token&&!exitLogoutSent){exitLogoutSent=true;sendServerLogout(token)}
+  }
   function cachedPublicSummary(){try{const saved=JSON.parse(preferenceGet(PUBLIC_SUMMARY_CACHE)||"null");return saved&&saved.summary? saved.summary:null}catch{return null}}
   function showCachedPublicSummary(){const summary=cachedPublicSummary();if(!summary)return false;publicSummary=summary;renderSummary(summary);renderPublicPresentation(summary);setStatus("","แสดงข้อมูลล่าสุดที่บันทึกไว้ · กำลังอัปเดต");return true}
   const esc = (v) => String(v ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[c]));
@@ -1209,6 +1227,7 @@ ${worksheet("สรุปค่าน้ำตาล",summaryTable("sugar"))}${w
   };
 
   function setAuthenticated(profile,token) {
+    exitLogoutSent=false;
     auth={...profile,token};
     document.body.classList.remove("public-mode");
     document.body.classList.toggle("village-user",profile.role==="village");
@@ -1239,8 +1258,11 @@ ${worksheet("สรุปค่าน้ำตาล",summaryTable("sugar"))}${w
     updateNavigationAccess(profile);
     loadData();
   }
-  function showLoggedOut() {
+  function showLoggedOut(options={}) {
+    const token=auth?.token||storageGet("dmht_token");
     auth=null;records=[];filtered=[];dashboardData=[];referrals=[];activeReferralHNs=[];storageRemove("dmht_token");
+    try{$("#loginForm").reset()}catch{}
+    if(options.invalidate!==false&&token)sendServerLogout(token);
     document.body.classList.remove("village-user");document.body.classList.add("public-mode");
     $("#dataCard").classList.remove("locked");$("#userChip").style.display="block";$("#userChip").textContent="โหมดนำเสนอ · ซ่อนข้อมูลผู้ป่วย";$("#loginBtn").textContent="เข้าสู่ระบบ";
     $("#visitQueue").classList.remove("show");
@@ -1262,12 +1284,9 @@ ${worksheet("สรุปค่าน้ำตาล",summaryTable("sugar"))}${w
   }
   async function restoreSession() {
     const token=storageGet("dmht_token");
-    if(!token){showLoggedOut();return}
-    showCachedPublicSummary();
-    try{
-      auth={token};const result=await api("session");
-      setAuthenticated(result.user,token);
-    }catch{showLoggedOut()}
+    storageRemove("dmht_token");
+    if(token)sendServerLogout(token);
+    showLoggedOut({invalidate:false});
   }
   $("#loginForm").addEventListener("submit",async e=>{
     e.preventDefault();const form=e.currentTarget,btn=$("#loginSubmit"),fd=new FormData(form);
@@ -1280,7 +1299,7 @@ ${worksheet("สรุปค่าน้ำตาล",summaryTable("sugar"))}${w
   });
   $("#loginBtn").addEventListener("click",()=>{
     if(auth){showLoggedOut();toast("ออกจากระบบแล้ว")}
-    else{$("#loginOverlay").classList.add("show");setTimeout(()=>$("#loginForm").elements.username.focus(),50)}
+    else{const form=$("#loginForm");form.reset();$("#loginOverlay").classList.add("show");setTimeout(()=>form.elements.username.focus(),50)}
   });
   document.querySelectorAll("[data-login-close]").forEach(b=>b.addEventListener("click",()=>$("#loginOverlay").classList.remove("show")));
   document.querySelectorAll("[data-password-close]").forEach(b=>b.addEventListener("click",()=>$("#passwordOverlay").classList.remove("show")));
@@ -1419,6 +1438,9 @@ ${worksheet("สรุปค่าน้ำตาล",summaryTable("sugar"))}${w
   });
   $("#closeRedAlert").addEventListener("click",()=>$("#redScreen").classList.remove("show"));
   document.addEventListener("keydown",e=>{if(e.key==="Escape"){closeForm();$("#deleteOverlay").classList.remove("show");$("#colorPatientsOverlay").classList.remove("show");$("#loginOverlay").classList.remove("show");$("#passwordOverlay").classList.remove("show");$("#referralOverlay").classList.remove("show");$("#referralPatientsOverlay").classList.remove("show");$("#visitFilesOverlay").classList.remove("show")}});
+  window.addEventListener("pagehide",secureLogoutOnExit,{capture:true});
+  window.addEventListener("pageshow",e=>{if(e.persisted)location.reload()});
+  $("#loginForm").reset();
   restoreSession();
 </script>
 </body>
