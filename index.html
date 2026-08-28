@@ -242,7 +242,7 @@
       <article class="card panel"><div class="panel-head"><div><div class="panel-title">สัดส่วนสีค่าน้ำตาล</div><div class="panel-sub" id="sugarDonutSub">ตามวันที่ลงข้อมูลที่เลือก</div></div></div><div class="donut-layout"><div class="donut" id="sugarDonut"><div class="donut-center"><strong id="sugarDonutTotal">0</strong><span>ครั้งตรวจที่มีผลน้ำตาล</span></div></div><div class="donut-legend" id="sugarDonutLegend"></div></div></article>
       <article class="card panel"><div class="panel-head"><div><div class="panel-title">สัดส่วนสีความดันโลหิต</div><div class="panel-sub" id="bpDonutSub">ตามวันที่ลงข้อมูลที่เลือก</div></div></div><div class="donut-layout"><div class="donut" id="bpDonut"><div class="donut-center"><strong id="bpDonutTotal">0</strong><span>ครั้งตรวจที่มีผลความดัน</span></div></div><div class="donut-legend" id="bpDonutLegend"></div></div></article>
     </section>
-    <section class="card panel" style="margin-top:14px"><div class="panel-head"><div><div class="panel-title" id="monthlyTrendTitle">แนวโน้มสัดส่วนค่าน้ำตาลรายเดือน</div><div class="panel-sub">แต่ละเดือนแสดง 4 แท่งแยกตามสี เพื่อเปรียบเทียบสัดส่วนได้ชัดเจน · ตัวเลขด้านบน = สีส้ม+สีแดง</div></div><div style="display:flex;gap:8px;flex-wrap:wrap"><select id="trendMetric" aria-label="เลือกประเภทผลตรวจ"><option value="sugar">ค่าน้ำตาล</option><option value="bp">ความดันโลหิต</option></select><select id="sugarChartMonth" aria-label="เลือกเดือนกราฟ"><option value="">เทียบทุกเดือน</option></select></div></div><div class="stack-counts" id="monthlyTrendLegend"><span>🟢 เขียว 60–125</span><span>🟡 เหลือง 126–154</span><span>🟠 ส้ม 155–182</span><span>🔴 แดง &lt;60 หรือ ≥183</span><span>🔴🔴 วิกฤต &lt;60 หรือ &gt;250</span></div><div class="trend-insight" id="monthlySugarInsight">กำลังวิเคราะห์แนวโน้ม…</div><div class="proportion-scroll"><div class="proportion-chart" id="monthlySugarBars"><div class="empty">กำลังโหลดข้อมูล…</div></div></div></section>
+    <section class="card panel" style="margin-top:14px"><div class="panel-head"><div><div class="panel-title" id="monthlyTrendTitle">แนวโน้มสัดส่วนค่าน้ำตาลรายเดือน</div><div class="panel-sub">แต่ละเดือนแสดง 4 แท่งแยกตามสี เพื่อเปรียบเทียบสัดส่วนได้ชัดเจน · ตัวเลขด้านบน = สีส้ม+สีแดง</div></div><div style="display:flex;gap:8px;flex-wrap:wrap"><select id="trendMetric" aria-label="เลือกประเภทผลตรวจ"><option value="sugar">ค่าน้ำตาล</option><option value="bp">ความดันโลหิต</option></select><select id="sugarChartMonth" aria-label="เลือกเดือนกราฟ"><option value="">เทียบทุกเดือน</option></select></div></div><div class="stack-counts" id="monthlyTrendLegend"><span>🟢 เขียว 70–125</span><span>🟡 เหลือง 126–154</span><span>🟠 ส้ม 155–182</span><span>🔴 แดง &lt;70 หรือ ≥183</span><span>🔴🔴 วิกฤต &lt;70 หรือ &gt;350</span></div><div class="trend-insight" id="monthlySugarInsight">กำลังวิเคราะห์แนวโน้ม…</div><div class="proportion-scroll"><div class="proportion-chart" id="monthlySugarBars"><div class="empty">กำลังโหลดข้อมูล…</div></div></div></section>
     </div>
 
     <section class="card table-card locked section-anchor app-view" id="dataCard" data-view="dataCard" hidden>
@@ -594,10 +594,10 @@
   };
   const sugarLevel = value => {
     const n=Number(value);if(!Number.isFinite(n)||String(value).trim()==="")return "none";
-    if(n<60)return "red";
+    if(n<70)return "red";
     return n<=125?"green":n<=154?"yellow":n<=182?"orange":"red";
   };
-  const isCriticalSugar = value => {const n=Number(value);return String(value??"").trim()!==""&&Number.isFinite(n)&&(n<60||n>250)};
+  const isCriticalSugar = value => {const n=Number(value);return String(value??"").trim()!==""&&Number.isFinite(n)&&(n<70||n>350)};
   const bpLevel = value => {
     const m=String(value||"").match(/(\d{2,3})\s*\/\s*(\d{2,3})/);if(!m)return "none";
     const sys=Number(m[1]),dia=Number(m[2]);
@@ -882,7 +882,7 @@
     const isBP=$("#trendMetric").value==="bp",metricName=isBP?"ความดันโลหิต":"น้ำตาล";
     const allRows=[...(isBP?currentMonthlyBP:currentMonthlySugar)].filter(x=>x?.month).sort((a,b)=>a.month.localeCompare(b.month));
     $("#monthlyTrendTitle").textContent=`แนวโน้มสัดส่วนค่า${metricName}${isBP?"ของผู้ป่วย HT":"ของผู้ป่วย DM"} รายเดือน`;
-    $("#monthlyTrendLegend").innerHTML=isBP?'<span>🟢 เขียว ≤139/89</span><span>🟡 เหลือง 140/90–159/99</span><span>🟠 ส้ม 160/100–179/109</span><span>🔴 แดง ≥180/110</span>':'<span>🟢 เขียว 60–125</span><span>🟡 เหลือง 126–154</span><span>🟠 ส้ม 155–182</span><span>🔴 แดง &lt;60 หรือ ≥183</span><span>🔴🔴 วิกฤต &lt;60 หรือ &gt;250</span>';
+    $("#monthlyTrendLegend").innerHTML=isBP?'<span>🟢 เขียว ≤139/89</span><span>🟡 เหลือง 140/90–159/99</span><span>🟠 ส้ม 160/100–179/109</span><span>🔴 แดง ≥180/110</span>':'<span>🟢 เขียว 70–125</span><span>🟡 เหลือง 126–154</span><span>🟠 ส้ม 155–182</span><span>🔴 แดง &lt;70 หรือ ≥183</span><span>🔴🔴 วิกฤต &lt;70 หรือ &gt;350</span>';
     const months=allRows.map(x=>x.month).sort().reverse();
     select.innerHTML='<option value="">เทียบทุกเดือน</option>'+months.map(m=>`<option value="${m}">${monthLabel(m)}</option>`).join("");
     if(months.includes(current))select.value=current;
