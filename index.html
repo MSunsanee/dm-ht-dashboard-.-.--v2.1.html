@@ -304,7 +304,7 @@
       <div class="kpis" style="padding:0 18px 18px">
         <article class="card kpi color-stat" role="button" tabindex="0" onclick="openReferralPatients('sent')"><div><div class="kpi-label">ส่งต่อในเดือน</div><div class="kpi-value" id="refSent">0</div><div class="panel-sub">กดดูรายชื่อ</div></div><div class="kpi-icon i-orange">↗</div></article>
         <article class="card kpi color-stat" role="button" tabindex="0" onclick="openReferralPatients('returned')"><div><div class="kpi-label">รับกลับในเดือน</div><div class="kpi-value" id="refReturned">0</div><div class="panel-sub">กดดูรายชื่อ</div></div><div class="kpi-icon i-green">↙</div></article>
-        <article class="card kpi color-stat" role="button" tabindex="0" onclick="openReferralPatients('current')"><div><div class="kpi-label">กำลังส่งต่อปัจจุบัน</div><div class="kpi-value" id="refCurrent">0</div><div class="panel-sub">กดดูรายชื่อ</div></div><div class="kpi-icon i-red">⌛</div></article>
+        <article class="card kpi color-stat" role="button" tabindex="0" onclick="openReferralPatients('current')"><div><div class="kpi-label" id="refCurrentLabel">กำลังส่งต่อปัจจุบัน</div><div class="kpi-value" id="refCurrent">0</div><div class="panel-sub">กดดูรายชื่อ</div></div><div class="kpi-icon i-red">⌛</div></article>
       </div>
       <div class="table-wrap"><table><thead><tr><th>วันที่</th><th>สถานะ</th><th>HN</th><th>ชื่อ–สกุล</th><th>หมู่</th><th>เหตุผล/การวินิจฉัย</th><th>วันนัด/รับกลับ</th><th>หมายเหตุ</th><th>จัดการ</th></tr></thead><tbody id="referralBody"><tr><td colspan="9"><div class="login-note">กรุณาเข้าสู่ระบบ</div></td></tr></tbody></table></div>
     </section>
@@ -1137,10 +1137,11 @@ ${worksheet("สรุปค่าน้ำตาล",summaryTable("sugar"))}${w
   }
   function referralMonthOf(r){return String(r.referralDate||"").slice(0,7)}
   function buildReferralMonths(){
-    const current=$("#referralMonth").value;
-    const months=[...new Set(referrals.map(referralMonthOf).filter(x=>/^\d{4}-\d{2}$/.test(x)))].sort().reverse();
+    const selected=$("#referralMonth").value,todayMonth=todayInput().slice(0,7);
+    const years=[...new Set([todayMonth,...referrals.map(referralMonthOf)].filter(x=>/^\d{4}-\d{2}$/.test(x)).map(x=>Number(x.slice(0,4))))].sort((a,b)=>b-a);
+    const months=years.flatMap(year=>Array.from({length:12},(_,i)=>`${year}-${String(12-i).padStart(2,"0")}`));
     $("#referralMonth").innerHTML='<option value="">ทุกเดือน</option>'+months.map(x=>`<option value="${x}">${monthLabel(x)}</option>`).join("");
-    $("#referralMonth").value=months.includes(current)?current:(months[0]||"");
+    $("#referralMonth").value=months.includes(selected)?selected:(months.includes(todayMonth)?todayMonth:(months[0]||""));
   }
   // เป้าหมายเดือนใหม่ = ยอดเดิม + รับกลับเดือนก่อน - ส่งต่อเดือนก่อน
   // จึงพิจารณาเฉพาะรายการที่เกิดก่อนวันแรกของเดือนที่เลือก
@@ -1150,9 +1151,9 @@ ${worksheet("สรุปค่าน้ำตาล",summaryTable("sugar"))}${w
     events.filter(r=>String(r.date||"")<start).sort((a,b)=>String(a.date).localeCompare(String(b.date))||Number(a.row||0)-Number(b.row||0)).forEach(r=>latest.set(String(r.hn||""),r));
     return new Set([...latest.values()].filter(r=>r.type==="ส่งต่อ").map(r=>String(r.hn)));
   }
-  function latestReferralByHN(){
-    const latest=new Map();
-    [...referrals].sort((a,b)=>String(a.referralDate).localeCompare(String(b.referralDate))||Number(a._row)-Number(b._row)).forEach(r=>latest.set(String(r.hn),r));
+  function latestReferralByHN(month=""){
+    const cutoff=/^\d{4}-\d{2}$/.test(String(month||""))?`${month}-31`:"9999-12-31",latest=new Map();
+    referrals.filter(r=>String(r.referralDate||"").slice(0,10)<=cutoff).sort((a,b)=>String(a.referralDate).localeCompare(String(b.referralDate))||Number(a._row)-Number(b._row)).forEach(r=>latest.set(String(r.hn),r));
     return latest;
   }
   function renderReferrals(){
@@ -1160,7 +1161,7 @@ ${worksheet("สรุปค่าน้ำตาล",summaryTable("sugar"))}${w
     const rows=referrals.filter(r=>!month||referralMonthOf(r)===month);
     $("#refSent").textContent=rows.filter(r=>r.type==="ส่งต่อ").length.toLocaleString("th-TH");
     $("#refReturned").textContent=rows.filter(r=>r.type==="รับกลับ").length.toLocaleString("th-TH");
-    $("#refCurrent").textContent=[...latestReferralByHN().values()].filter(r=>r.type==="ส่งต่อ").length.toLocaleString("th-TH");
+    $("#refCurrent").textContent=[...latestReferralByHN(month).values()].filter(r=>r.type==="ส่งต่อ").length.toLocaleString("th-TH");$("#refCurrentLabel").textContent=month?`กำลังส่งต่อ ณ สิ้นเดือน`:"กำลังส่งต่อปัจจุบัน";
     $("#referralBody").innerHTML=rows.length?rows.map(r=>`<tr><td>${formatThaiDate(r.referralDate)}</td><td><span class="badge ${r.type==="ส่งต่อ"?"ht":"dm"}">${esc(r.type)}</span></td><td><strong>${fmt(r.hn)}</strong></td><td class="name">${fmt(r.firstName)} ${fmt(r.lastName)}</td><td>${fmt(r.village)}</td><td>${fmt(r.reason)}</td><td>${formatThaiDate(r.followupDate)}</td><td>${fmt(r.note)}</td><td>${auth?.role==="admin"?`<button class="icon-btn" title="ลบ" onclick="deleteReferral('${esc(r.id)}')">⌫</button>`:'<span class="badge none">ดูเท่านั้น</span>'}</td></tr>`).join(""):'<tr><td colspan="9"><div class="empty">ไม่พบรายการในเดือนนี้</div></td></tr>';
   }
   window.openReferralPatients = kind => {
@@ -1168,12 +1169,12 @@ ${worksheet("สรุปค่าน้ำตาล",summaryTable("sugar"))}${w
     const month=$("#referralMonth").value;
     let rows,title;
     if(kind==="current"){
-      rows=[...latestReferralByHN().values()].filter(r=>r.type==="ส่งต่อ");title="ผู้ป่วยที่กำลังส่งต่อปัจจุบัน";
+      rows=[...latestReferralByHN(month).values()].filter(r=>r.type==="ส่งต่อ");title=month?`ผู้ป่วยที่กำลังส่งต่อ ณ สิ้นเดือน ${monthLabel(month)}`:"ผู้ป่วยที่กำลังส่งต่อปัจจุบัน";
     }else{
       const type=kind==="sent"?"ส่งต่อ":"รับกลับ";rows=referrals.filter(r=>(!month||referralMonthOf(r)===month)&&r.type===type);title="รายชื่อผู้ป่วย"+type;
     }
     $("#referralPatientsTitle").textContent=title;
-    $("#referralPatientsSub").textContent=`${kind==="current"?"สถานะล่าสุด":month?monthLabel(month):"ทุกเดือน"} · ${rows.length.toLocaleString("th-TH")} ราย`;
+    $("#referralPatientsSub").textContent=`${kind==="current"?(month?`สถานะ ณ สิ้นเดือน ${monthLabel(month)}`:"สถานะล่าสุด"):month?monthLabel(month):"ทุกเดือน"} · ${rows.length.toLocaleString("th-TH")} ราย`;
     $("#referralPatientsBody").innerHTML=rows.length?rows.map((r,i)=>`<tr><td>${i+1}</td><td>${formatThaiDate(r.referralDate)}</td><td><strong>${fmt(r.hn)}</strong></td><td class="name">${fmt(r.firstName)} ${fmt(r.lastName)}</td><td>${fmt(r.village)}</td><td><span class="badge ${r.type==="ส่งต่อ"?"ht":"dm"}">${esc(r.type)}</span></td><td>${fmt(r.reason)}</td></tr>`).join(""):'<tr><td colspan="7"><div class="empty">ไม่พบรายชื่อผู้ป่วย</div></td></tr>';
     $("#referralPatientsOverlay").classList.add("show");
   };
