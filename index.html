@@ -494,10 +494,10 @@
 
 <script>
   const GAS_URL = "https://script.google.com/macros/s/AKfycbx9y2f2fVFf2dGYV1LDuC9xISrqghO0vDg0PZjLE5ILkN0Nxf6utz3gAKCqqkIdoMt2/exec";
-  const REQUIRED_API_VERSION = 25;
+  const REQUIRED_API_VERSION = 26;
   const PAGE_SIZE = 20;
   const fields = ["recordDate","hn","firstName","lastName","birthDate","age","phone","houseNo","village","weight","height","waist","bp1","bp2","pulse","bloodSugar","appointmentDate","appointmentStatus","medicationAt","dm","ht","oldCva","hyperlipidaemia","ckdStage"];
-  let records = [], filtered = [], dashboardData = [], referrals = [], activeReferralHNs = [], currentMonthlySugar = [], currentMonthlyBP = [], publicSummary = {}, page = 1, editing = null, deleting = null, auth = null, formMode = "basic", loadPromise = null, queueMode = "all";
+  let records = [], filtered = [], dashboardData = [], referrals = [], activeReferralHNs = [], referralEvents = [], currentMonthlySugar = [], currentMonthlyBP = [], publicSummary = {}, page = 1, editing = null, deleting = null, auth = null, formMode = "basic", loadPromise = null, queueMode = "all";
 
   const $ = (s) => document.querySelector(s);
   const storageGet = key => { try{return sessionStorage.getItem(key)||""}catch{return ""} };
@@ -731,7 +731,7 @@
     try{
       const result=await api("summary");
       publicSummary=result.summary||{};preferenceSet(PUBLIC_SUMMARY_CACHE,JSON.stringify({savedAt:Date.now(),summary:publicSummary}));renderSummary(publicSummary);renderPublicPresentation(publicSummary);
-      if(Number(result.apiVersion||0)<REQUIRED_API_VERSION){setStatus("bad","ต้อง Deploy GAS เวอร์ชันใหม่");toast("กรุณา Deploy Code.gs เวอร์ชัน 25 เพื่อใช้การสรุปผลตามกลุ่มโรค",true)}
+      if(Number(result.apiVersion||0)<REQUIRED_API_VERSION){setStatus("bad","ต้อง Deploy GAS เวอร์ชันใหม่");toast("กรุณา Deploy Code.gs เวอร์ชัน 26 เพื่อใช้การสรุปผลตามกลุ่มโรค",true)}
       else setStatus("ok","ข้อมูลภาพรวมล่าสุด");
     }catch(err){
       setStatus("bad","โหลดภาพรวมไม่สำเร็จ");
@@ -792,6 +792,7 @@
       records = Array.isArray(result.data) ? result.data : [];
       referrals = Array.isArray(referralResult.data) ? referralResult.data : [];
       activeReferralHNs = Array.isArray(result.activeReferralHNs) ? result.activeReferralHNs.map(String) : [...latestReferralByHN().values()].filter(r=>r.type==="ส่งต่อ").map(r=>String(r.hn));
+      referralEvents = Array.isArray(result.referralEvents) ? result.referralEvents : referrals.map(r=>({date:String(r.referralDate||''),type:r.type,hn:String(r.hn||''),village:String(r.village||''),row:Number(r._row||0)}));
       records = records.map((r,i)=>({...r,pulse:normalizePulse(r.pulse),_row:Number(r._row||r.row||i+5),_sheet:String(r._sheet||"รวม")}));
       records = hydrateMasterDemographics(records);
       // records includes both master patients and monthly visit rows.  The
@@ -826,7 +827,7 @@
     const q=$("#searchInput").value.trim().toLowerCase(), m=$("#monthFilter").value, v=$("#villageFilter").value, d=$("#diseaseFilter").value,a=$("#appointmentFilter").value,from=$("#rangeFrom").value,to=$("#rangeTo").value;
     const queueDate=$("#queueDate").value||preferenceGet("dmht_record_date")||todayInput(),queueMonth=String(queueDate).slice(0,7);
     const monthVisits=records.filter(r=>{if(r._sheet==="รวม")return false;const visitMonth=/^\d{4}-\d{2}$/.test(String(r._sheet||""))?String(r._sheet):recordDateKey(r.recordDate).slice(0,7);return visitMonth===queueMonth});
-    const completedVisits=latestByHN(monthVisits),doneKeys=new Set(completedVisits.map(patientQueueKey)),activeReferralSet=new Set(activeReferralHNs.map(String));
+    const completedVisits=latestByHN(monthVisits),doneKeys=new Set(completedVisits.map(patientQueueKey)),activeReferralSet=activeReferralSetForMonth(queueMonth);
     const masters=records.filter(r=>r._sheet==="รวม");
     const pendingPatients=masters.filter(r=>!doneKeys.has(patientQueueKey(r))&&!activeReferralSet.has(String(r.hn||"")));
     $("#pendingCount").textContent=pendingPatients.length.toLocaleString("th-TH");
@@ -867,13 +868,13 @@
     $("#prevBtn").disabled=page<=1; $("#nextBtn").disabled=page>=pages;
   }
   function updateDashboard(data=records) {
-    const patientMap=new Map();data.forEach(r=>{const key=`${String(r.firstName||"").trim().toLowerCase()}|${String(r.lastName||"").trim().toLowerCase()}`;if(key!=="|"&&(!patientMap.has(key)||r._sheet==="รวม"))patientMap.set(key,r)});const patients=[...patientMap.values()];
+    const patientMap=new Map();data.forEach(r=>{const key=`${String(r.firstName||"").trim().toLowerCase()}|${String(r.lastName||"").trim().toLowerCase()}`;if(key!=="|"&&(!patientMap.has(key)||r._sheet==="รวม"))patientMap.set(key,r)});const selectedDateForTarget=$("#queueDate")?.value||preferenceGet("dmht_record_date")||todayInput(),selectedMonthForTarget=String(selectedDateForTarget).slice(0,7),carriedReferralSet=activeReferralSetForMonth(selectedMonthForTarget),patients=[...patientMap.values()].filter(r=>!carriedReferralSet.has(String(r.hn||"")));
     $("#kpiTotal").textContent=patients.length.toLocaleString("th-TH");
     $("#kpiDM").textContent=patients.filter(r=>isYes(r.dm)).length.toLocaleString("th-TH");
     $("#kpiHT").textContent=patients.filter(r=>isYes(r.ht)).length.toLocaleString("th-TH");
     $("#kpiBoth").textContent=patients.filter(r=>isYes(r.dm)&&isYes(r.ht)).length.toLocaleString("th-TH");
     const from=$("#rangeFrom")?.value||"",to=$("#rangeTo")?.value||"",selectedDate=$("#queueDate")?.value||preferenceGet("dmht_record_date")||todayInput(),selectedMonth=String(selectedDate).slice(0,7);
-    const selectedVisits=latestByHN(data.filter(r=>{if(r._sheet==="รวม")return false;const key=recordDateKey(r.recordDate);if(from||to)return key&&(!from||key>=from)&&(!to||key<=to);return ((/^\d{4}-\d{2}$/.test(String(r._sheet||""))?String(r._sheet):String(r.recordDate||"").slice(0,7))===selectedMonth)}));
+    const selectedVisits=latestByHN(data.filter(r=>{if(r._sheet==="รวม")return false;const key=recordDateKey(r.recordDate);if(from||to)return key&&(!from||key>=from)&&(!to||key<=to);return ((/^\d{4}-\d{2}$/.test(String(r._sheet||""))?String(r._sheet):String(r.recordDate||"").slice(0,7))===selectedMonth)})).filter(r=>!carriedReferralSet.has(String(r.hn||"")));
     const groups={},checkedGroups={};patients.forEach(r=>{const v=String(r.village??"").trim();if(v)groups[v]=(groups[v]||0)+1});selectedVisits.forEach(r=>{const v=String(r.village??"").trim();if(v)checkedGroups[v]=(checkedGroups[v]||0)+1});
     const villages=Object.entries(groups).sort((a,b)=>Number(a[0])-Number(b[0])||a[0].localeCompare(b[0],"th")).map(([v,count])=>({village:v,count,checked:checkedGroups[v]||0}));
     renderVillageCoverage(villages,from||to?`${from?formatThaiDate(from):"เริ่มต้น"} ถึง ${to?formatThaiDate(to):"ปัจจุบัน"}`:`เดือน ${monthLabel(selectedMonth)}`);
@@ -1026,7 +1027,7 @@
   }
   function monthlyRegistryRows(applyStatus=true){
     const month=$("#registryMonth").value,village=$("#registryVillage").value;
-    const masters=records.filter(r=>r._sheet==="รวม"&&(!village||String(r.village||"")===village));
+    const carriedReferralSet=activeReferralSetForMonth(month),masters=records.filter(r=>r._sheet==="รวม"&&!carriedReferralSet.has(String(r.hn||""))&&(!village||String(r.village||"")===village));
     const visits=records.filter(r=>r._sheet!=="รวม"&&((/^\d{4}-\d{2}$/.test(String(r._sheet||""))?String(r._sheet):String(r.recordDate||"").slice(0,7))===month));
     const latest=new Map();visits.forEach(r=>{const key=registryPatientKey(r),old=latest.get(key);if(!old||recordTime(r)>=recordTime(old)||Number(r._row)>Number(old._row))latest.set(key,r)});
     const rows=masters.sort((a,b)=>Number(a.village)-Number(b.village)||String(a.firstName||"").localeCompare(String(b.firstName||""),"th")).map(patient=>{const visit=latest.get(registryPatientKey(patient))||null;return {patient:visit?{...patient,birthDate:String(patient.birthDate||"").trim()||visit.birthDate||"",phone:String(patient.phone||"").trim()||visit.phone||""}:patient,visit}});
@@ -1140,6 +1141,14 @@ ${worksheet("สรุปค่าน้ำตาล",summaryTable("sugar"))}${w
     const months=[...new Set(referrals.map(referralMonthOf).filter(x=>/^\d{4}-\d{2}$/.test(x)))].sort().reverse();
     $("#referralMonth").innerHTML='<option value="">ทุกเดือน</option>'+months.map(x=>`<option value="${x}">${monthLabel(x)}</option>`).join("");
     $("#referralMonth").value=months.includes(current)?current:(months[0]||"");
+  }
+  // เป้าหมายเดือนใหม่ = ยอดเดิม + รับกลับเดือนก่อน - ส่งต่อเดือนก่อน
+  // จึงพิจารณาเฉพาะรายการที่เกิดก่อนวันแรกของเดือนที่เลือก
+  function activeReferralSetForMonth(month){
+    const start=/^\d{4}-\d{2}$/.test(String(month||""))?`${month}-01`:"9999-12-31",latest=new Map();
+    const events=referralEvents.length?referralEvents:referrals.map(r=>({date:String(r.referralDate||""),type:r.type,hn:String(r.hn||""),row:Number(r._row||0)}));
+    events.filter(r=>String(r.date||"")<start).sort((a,b)=>String(a.date).localeCompare(String(b.date))||Number(a.row||0)-Number(b.row||0)).forEach(r=>latest.set(String(r.hn||""),r));
+    return new Set([...latest.values()].filter(r=>r.type==="ส่งต่อ").map(r=>String(r.hn)));
   }
   function latestReferralByHN(){
     const latest=new Map();
@@ -1281,7 +1290,7 @@ ${worksheet("สรุปค่าน้ำตาล",summaryTable("sugar"))}${w
   }
   function showLoggedOut(options={}) {
     const token=auth?.token||storageGet("dmht_token");
-    auth=null;records=[];filtered=[];dashboardData=[];referrals=[];activeReferralHNs=[];storageRemove("dmht_token");
+    auth=null;records=[];filtered=[];dashboardData=[];referrals=[];activeReferralHNs=[];referralEvents=[];storageRemove("dmht_token");
     try{$("#loginForm").reset()}catch{}
     if(options.invalidate!==false&&token)sendServerLogout(token);
     document.body.classList.remove("village-user");document.body.classList.add("public-mode");
