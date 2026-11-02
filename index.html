@@ -857,7 +857,7 @@
         <td class="name">${auth?.role!=="viewer"&&(r._sheet==="รวม"||!["staff","demo"].includes(auth?.role))?`<button class="patient-link" onclick="${r._sheet==="รวม"?"openVisit":"openEdit"}('${esc(r._sheet)}',${Number(r._row)})">${fmt(r.firstName)} ${fmt(r.lastName)}</button>`:`${fmt(r.firstName)} ${fmt(r.lastName)}`}</td><td>${r.birthDate?esc(birthDateBE(r.birthDate)):"–"}</td><td>${fmt(r.age)}</td><td>${fmt(r.phone)}</td>
         <td>${r.houseNo?`เลขที่ ${esc(r.houseNo)}`:"–"} ${r.village?`หมู่ ${esc(r.village)}`:""}</td>
         <td>${fmt(r.weight)} / ${fmt(r.height)}</td><td><strong>${calculateBMI(r.weight,r.height)||"–"}</strong></td><td>${r.bp1?levelBadge(bpLevel(r.bp1),r.bp1):"–"}${r.bp2?` ${levelBadge(bpLevel(r.bp2),r.bp2)}`:""}</td>
-        <td>${r.bloodSugar!==""&&r.bloodSugar!=null?levelBadge(sugarLevel(r.bloodSugar),r.bloodSugar):"–"}</td><td>${formatThaiDate(r.appointmentDate)}</td><td>${appointmentBadge(r.appointmentStatus)}</td><td>${fmt(r.medicationAt)}</td>
+        <td>${r.bloodSugar!==""&&r.bloodSugar!=null?levelBadge(sugarLevel(r.bloodSugar),r.bloodSugar):"–"}</td><td>${formatThaiDate(nextAppointmentForHistory(r))}</td><td>${appointmentBadge(r.appointmentStatus)}</td><td>${fmt(r.medicationAt)}</td>
         <td>${conditionBadges(r)}</td><td>${referralStatus.has(String(r.hn))?`<span class="badge ${referralStatus.get(String(r.hn)).type==="ส่งต่อ"?"ht":"dm"}">${esc(referralStatus.get(String(r.hn)).type)}</span>`:'<span class="badge none">รับยาตามปกติ</span>'}</td>
         <td class="visit-files-col">${parseAttachments(r.attachments).length?`<button class="btn btn-soft" onclick="showVisitFiles('${esc(r._sheet)}',${Number(r._row)})">📎 ${parseAttachments(r.attachments).length} ไฟล์</button>`:'<span class="muted">ไม่มีไฟล์</span>'}</td>
         <td><div class="actions">${auth?.role==="admin"?`<button class="icon-btn" title="ส่งต่อ–รับกลับ" onclick="openReferral('${esc(r.hn)}')">⇄</button>`:""}${!["viewer","staff","demo"].includes(auth?.role)?`<button class="icon-btn" title="แก้ไข" onclick="openEdit('${esc(r._sheet)}',${Number(r._row)})">✎</button>`:""}
@@ -938,6 +938,19 @@
 
   function recordTime(r){const t=new Date(String(r.recordDate||"")).getTime();return Number.isFinite(t)?t:0}
   function latestByHN(list){const map=new Map();[...list].sort((a,b)=>recordTime(a)-recordTime(b)||Number(a._row)-Number(b._row)).forEach(r=>{const first=String(r.firstName||"").trim().toLowerCase(),last=String(r.lastName||"").trim().toLowerCase(),hn=String(r.hn||"").trim();const key=first||last?`person:${first}|${last}`:(hn?`hn:${hn}`:"");if(key)map.set(key,r)});return [...map.values()]}
+  function nextAppointmentForHistory(visit,allVisits=records){
+    if(!visit)return "";
+    const visitKey=recordDateKey(visit.recordDate), visitMonth=visitKey.slice(0,7);
+    if(!visitMonth)return visit.appointmentDate||"";
+    const samePatient=r=>{
+      const hn=String(visit.hn||"").trim();
+      return hn?String(r.hn||"").trim()===hn:patientQueueKey(r)===patientQueueKey(visit);
+    };
+    const scheduled=[...allVisits].filter(r=>r._sheet!=="รวม"&&samePatient(r)&&recordDateKey(r.recordDate)<visitKey&&recordDateKey(r.appointmentDate).slice(0,7)===visitMonth)
+      .sort((a,b)=>recordDateKey(b.recordDate).localeCompare(recordDateKey(a.recordDate)))[0];
+    // Show the appointment made on an earlier visit in the month the patient was scheduled to return.
+    return scheduled?scheduled.appointmentDate:(visit.appointmentDate||"");
+  }
   function buildManagementFilters(){
     const mm=$("#managementMonth").value,mv=$("#managementVillage").value;
     const months=[...new Set(records.map(r=>/^\d{4}-\d{2}$/.test(String(r._sheet||""))?String(r._sheet):String(r.recordDate||"").slice(0,7)).filter(x=>/^\d{4}-\d{2}$/.test(x)))].sort().reverse();
