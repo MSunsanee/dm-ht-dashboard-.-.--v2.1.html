@@ -82,6 +82,7 @@
     .required-star{color:#DC2626;font-weight:900;margin-left:3px}.required-note{font-size:12px;color:#991B1B;margin:-4px 0 14px}
     .attachment-list{display:grid;gap:8px;margin-top:9px}.attachment-item{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:9px 11px;border:1px solid var(--line);border-radius:10px;background:#f8fbfa}.attachment-item button{white-space:nowrap}
     .modal-foot{background:#fff;border-top:1px solid var(--line);padding:15px 22px;display:flex;justify-content:flex-end;gap:9px;flex-shrink:0}
+    .export-choice-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}.export-choice{border:1px solid var(--line);border-radius:16px;background:#fff;padding:20px;text-align:left;cursor:pointer;color:var(--text);transition:.18s ease}.export-choice:hover,.export-choice:focus-visible{border-color:var(--primary);box-shadow:0 8px 24px rgba(15,118,110,.14);transform:translateY(-1px);outline:0}.export-choice strong{display:block;font-size:17px;color:var(--primary2);margin-bottom:6px}.export-choice span{display:block;color:var(--muted);font-size:13px;line-height:1.55}.export-choice.sensitive{background:#fffaf0;border-color:#f3d5a0}.export-choice.sensitive strong{color:#9a5a00}.export-privacy-note{margin-top:14px;padding:11px 13px;border-radius:11px;background:#f2f7f6;color:var(--muted);font-size:12px;line-height:1.55}
     .toast-wrap{position:fixed;right:18px;bottom:18px;z-index:100;display:grid;gap:9px}.toast{min-width:260px;max-width:380px;background:#173b36;color:#fff;
       padding:13px 16px;border-radius:12px;box-shadow:var(--shadow);animation:slide .2s}.toast.err{background:#991b1b}
     .loader{width:16px;height:16px;border:2px solid rgba(255,255,255,.45);border-top-color:#fff;border-radius:50%;animation:spin .7s linear infinite}
@@ -115,7 +116,7 @@
       .kpi{padding:14px;min-height:96px}.kpi-value{font-size:25px}.kpi-icon{width:40px;height:40px}.form-grid{grid-template-columns:1fr}.span2{grid-column:auto}
       .toolbar>*{width:100%}.search{min-width:100%}.pagination{align-items:flex-start;flex-direction:column}.color-grid{grid-template-columns:repeat(2,1fr)}.donut-layout{grid-template-columns:1fr}.stack-counts{margin-top:-5px}.proportion-chart{gap:9px;padding-left:5px;padding-right:5px}
       .visit-queue{align-items:stretch;padding:12px 14px}.visit-queue input{width:100%}.queue-tabs{display:grid;grid-template-columns:1fr 1fr 1fr;width:100%}.queue-tab{padding:9px 5px;font-size:13px}.queue-hint{width:100%;margin-left:0}
-      input,select,.btn{min-height:46px;font-size:16px}.overlay{padding:0;align-items:stretch}.modal{width:100%!important;max-height:100vh;height:100vh;max-height:100dvh;height:100dvh;border-radius:0}
+      input,select,.btn{min-height:46px;font-size:16px}.overlay{padding:0;align-items:stretch}.modal{width:100%!important;max-height:100vh;height:100vh;max-height:100dvh;height:100dvh;border-radius:0}.export-choice-grid{grid-template-columns:1fr}
       .modal-head{padding:calc(15px + env(safe-area-inset-top)) max(17px,env(safe-area-inset-right)) 15px max(17px,env(safe-area-inset-left))}.form-body{padding:17px max(17px,env(safe-area-inset-right)) 24px max(17px,env(safe-area-inset-left))}.modal-foot{padding:12px max(17px,env(safe-area-inset-right)) calc(12px + env(safe-area-inset-bottom)) max(17px,env(safe-area-inset-left));gap:8px}.modal-foot .btn{flex:1}
       .mobile-add.active{display:grid;place-items:center;right:max(18px,env(safe-area-inset-right));bottom:calc(18px + env(safe-area-inset-bottom))}.toast-wrap{left:max(12px,env(safe-area-inset-left));right:max(12px,env(safe-area-inset-right));bottom:calc(82px + env(safe-area-inset-bottom))}.toast{min-width:0;max-width:none;width:100%}.advice-grid{grid-template-columns:1fr}.table-wrap{max-height:none;overflow:visible}.table-wrap table{min-width:0}.table-wrap thead{display:none}#tableBody,#tableBody tr,#tableBody td{display:block;width:100%}#tableBody tr{padding:13px 14px;border-bottom:8px solid var(--bg)}#tableBody td{border:0;padding:3px 0;white-space:normal;overflow-wrap:anywhere}#tableBody td:nth-child(1),#tableBody td:nth-child(2),#tableBody td:nth-child(5),#tableBody td:nth-child(6),#tableBody td:nth-child(7),#tableBody td:nth-child(9),#tableBody td:nth-child(12),#tableBody td:nth-child(13),#tableBody td:nth-child(15),#tableBody td:nth-child(16){display:none}.table-card.locked #tableBody td{display:block!important;padding:0}.table-card.locked #tableBody tr{padding:0;border:0}#tableBody td:nth-child(3){font-size:12px;color:var(--muted)}#tableBody td:nth-child(4){font-size:18px;margin-bottom:5px}#tableBody td:nth-child(8)::before{content:'ที่อยู่: ';font-weight:700}#tableBody td:nth-child(10)::before{content:'ความดัน: ';font-weight:700}#tableBody td:nth-child(11)::before{content:'น้ำตาล: ';font-weight:700}#tableBody td:nth-child(14)::before{content:'โรค: ';font-weight:700}#tableBody td:nth-child(17){margin-top:8px}.referral-patients-wrap,.color-patients-wrap{max-height:calc(100dvh - 190px);overflow-y:auto!important}.referral-patients-table,.referral-patients-table tbody,.referral-patients-table tr,.referral-patients-table td{display:block;width:100%}.referral-patients-table tr{padding:12px 14px;border-bottom:8px solid var(--bg)}.referral-patients-table td{border:0;padding:3px 0}.referral-patients-table td:nth-child(1),.referral-patients-table td:nth-child(5){display:none}.referral-patients-table td:nth-child(2)::before{content:'วันที่: ';font-weight:700}.referral-patients-table td:nth-child(3)::before{content:'HN: ';font-weight:700}.referral-patients-table td:nth-child(6)::before{content:'สถานะ: ';font-weight:700}.referral-patients-table td:nth-child(7)::before{content:'เหตุผล: ';font-weight:700}.color-patients-table,.color-patients-table tbody,.color-patients-table tr,.color-patients-table td{display:block;width:100%}.color-patients-table tr{display:flex;flex-direction:column;padding:13px 16px;border-bottom:8px solid var(--bg)}.color-patients-table td{border:0;padding:3px 0}.color-patients-table td:nth-child(1){display:none}.color-patients-table td:nth-child(4){order:-2;font-size:18px;font-weight:800;margin-bottom:5px}.color-patients-table td:nth-child(2)::before{content:'วันที่: ';font-weight:700}.color-patients-table td:nth-child(3)::before{content:'HN: ';font-weight:700}.color-patients-table td:nth-child(5)::before{content:'หมู่: ';font-weight:700}.color-patients-table td:nth-child(6)::before{content:'ค่าตรวจ: ';font-weight:700}.color-patients-table td:nth-child(7)::before{content:'ระดับ: ';font-weight:700}.monthly-registry-wrap{overflow:visible!important}.monthly-registry-table,.monthly-registry-table tbody,.monthly-registry-table tr,.monthly-registry-table td{display:block;width:100%}.monthly-registry-table tr{display:flex;flex-direction:column;padding:13px 14px;border-bottom:8px solid var(--bg)}.monthly-registry-table td{border:0;padding:3px 0}.monthly-registry-table td:nth-child(1){display:none}.monthly-registry-table td:nth-child(4){order:-2;font-size:17px;font-weight:800}.monthly-registry-table td:nth-child(2)::before{content:'หมู่: ';font-weight:700}.monthly-registry-table td:nth-child(3)::before{content:'HN: ';font-weight:700}.monthly-registry-table td:nth-child(5)::before{content:'วันที่: ';font-weight:700}.monthly-registry-table td:nth-child(6)::before{content:'น้ำหนัก: ';font-weight:700}.monthly-registry-table td:nth-child(7)::before{content:'ส่วนสูง: ';font-weight:700}.monthly-registry-table td:nth-child(8)::before{content:'รอบเอว: ';font-weight:700}.monthly-registry-table td:nth-child(9)::before{content:'ความดัน: ';font-weight:700}.monthly-registry-table td:nth-child(10)::before{content:'ชีพจร: ';font-weight:700}.monthly-registry-table td:nth-child(11)::before{content:'น้ำตาล: ';font-weight:700}.monthly-registry-table td:nth-child(12)::before{content:'วันนัด: ';font-weight:700}.monthly-registry-table td:nth-child(13){margin-top:7px}}
     @media(max-width:760px){
@@ -491,6 +492,19 @@
 <div class="overlay" id="visitFilesOverlay" role="dialog" aria-modal="true">
   <div class="modal" style="width:min(650px,100%)"><div class="modal-head"><div><div class="modal-title">ไฟล์ประวัติการรักษา</div><div class="panel-sub" id="visitFilesSub"></div></div><button type="button" class="close" data-visit-files-close>×</button></div><div class="form-body"><div class="attachment-list" id="visitFilesList"></div></div><div class="modal-foot"><button type="button" class="btn btn-primary" data-visit-files-close>ปิด</button></div></div>
 </div>
+<div class="overlay" id="excelExportOverlay" role="dialog" aria-modal="true" aria-labelledby="excelExportTitle">
+  <div class="modal" style="width:min(680px,100%)">
+    <div class="modal-head"><div><div class="modal-title" id="excelExportTitle">เลือกรูปแบบไฟล์ดาวน์โหลด</div><div class="panel-sub" id="excelExportSub">เลือกว่าต้องการให้ไฟล์มีเลขบัตรประชาชนหรือไม่</div></div><button type="button" class="close" data-excel-export-close>×</button></div>
+    <div class="form-body">
+      <div class="export-choice-grid">
+        <button type="button" class="export-choice" id="exportWithoutPid"><strong>ไม่มีเลขบัตรประชาชน</strong><span>เหมาะสำหรับรายงานทั่วไป การประชุม และการส่งต่อไฟล์ที่ไม่จำเป็นต้องใช้เลขบัตร</span></button>
+        <button type="button" class="export-choice sensitive" id="exportWithPid"><strong>มีเลขบัตรประชาชน</strong><span>เพิ่มคอลัมน์เลขบัตรประชาชน 13 หลักในไฟล์ กรุณาใช้เฉพาะงานที่ได้รับอนุญาต</span></button>
+      </div>
+      <div class="export-privacy-note">เลขบัตรประชาชนเป็นข้อมูลส่วนบุคคลอ่อนไหว ควรเลือก “ไม่มีเลขบัตรประชาชน” หากงานนั้นไม่จำเป็นต้องใช้</div>
+    </div>
+    <div class="modal-foot"><button type="button" class="btn btn-ghost" data-excel-export-close>ยกเลิก</button></div>
+  </div>
+</div>
 <div class="toast-wrap" id="toastWrap"></div>
 <div class="red-screen" id="redScreen" role="alertdialog" aria-modal="true"><div class="red-alert-box"><div style="font-size:50px">🚨</div><h2 id="redAlertTitle">พบผู้ป่วยระดับสีแดง</h2><div id="redAlertDetail"></div><p><strong>กรุณาวัดซ้ำ ประเมินอาการ และดำเนินการตามแนวทางของหน่วยบริการทันที</strong></p><button class="btn btn-danger" id="closeRedAlert">รับทราบและดำเนินการ</button></div></div>
 <button class="mobile-add" id="mobileAddBtn" aria-label="เพิ่มข้อมูลผู้ป่วย">＋</button>
@@ -500,7 +514,7 @@
   const REQUIRED_API_VERSION = 33;
   const PAGE_SIZE = 20;
   const fields = ["recordDate","hn","firstName","lastName","pid","birthDate","age","phone","houseNo","village","weight","height","waist","bp1","bp2","pulse","bloodSugar","appointmentDate","appointmentStatus","medicationAt","dm","ht","oldCva","hyperlipidaemia","ckdStage"];
-  let records = [], filtered = [], dashboardData = [], referrals = [], activeReferralHNs = [], referralEvents = [], currentMonthlySugar = [], currentMonthlyBP = [], publicSummary = {}, page = 1, editing = null, deleting = null, auth = null, formMode = "basic", loadPromise = null, queueMode = "all", sessionRestoreTimer = null;
+  let records = [], filtered = [], dashboardData = [], referrals = [], activeReferralHNs = [], referralEvents = [], currentMonthlySugar = [], currentMonthlyBP = [], publicSummary = {}, page = 1, editing = null, deleting = null, auth = null, formMode = "basic", loadPromise = null, queueMode = "all", sessionRestoreTimer = null, pendingExcelExport = "";
   const SHEETJS_URLS = [
     "https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js",
     "https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"
@@ -1085,7 +1099,31 @@
     $("#registrySummary").textContent=`${monthLabel(month)} · ${village?`หมู่ ${village}`:"ทุกหมู่บ้าน"} · ผู้ป่วยทั้งหมด ${allRows.length} คน · ตรวจแล้ว ${recorded} คน · ยังไม่ตรวจ ${allRows.length-recorded} คน · กำลังแสดง ${statusLabel} ${rows.length} คน`;
     $("#monthlyRegistryBody").innerHTML=rows.length?rows.map((x,i)=>{const p=x.patient,v=x.visit;return `<tr><td>${i+1}</td><td>${fmt(p.village)}</td><td><strong>${fmt(p.hn)}</strong></td><td class="name">${fmt(p.firstName)} ${fmt(p.lastName)}</td><td>${v?formatThaiDate(v.recordDate):"–"}</td><td>${v?fmt(v.weight):"–"}</td><td>${v?fmt(v.height):"–"}</td><td>${v?(calculateBMI(v.weight,v.height)||"–"):"–"}</td><td>${v?fmt(v.waist):"–"}</td><td>${v?fmt(v.bp2||v.bp1):"–"}</td><td>${v?fmt(v.pulse):"–"}</td><td>${v?fmt(v.bloodSugar):"–"}</td><td>${v?formatThaiDate(v.appointmentDate):"–"}</td><td>${v?appointmentBadge(v.appointmentStatus):"–"}</td><td><span class="recorded-badge${v?"":" missing"}">${v?"บันทึกแล้ว":"ยังไม่บันทึก"}</span></td></tr>`}).join(""):'<tr><td colspan="15"><div class="empty">ไม่พบผู้ป่วยในหมู่ที่เลือก</div></td></tr>';
   }
-  function downloadMonthlyRegistryExcel(){
+  function closeExcelExportOptions(){
+    $("#excelExportOverlay").classList.remove("show");
+    pendingExcelExport="";
+  }
+  function openExcelExportOptions(kind){
+    if(kind==="patient"&&!filtered.length){toast("ไม่มีข้อมูลสำหรับดาวน์โหลด",true);return}
+    if(kind==="registry"){
+      if(!["admin","demo"].includes(auth?.role)){toast("บัญชีนี้ไม่มีสิทธิ์ดาวน์โหลดรายงาน",true);return}
+      if(!monthlyRegistryRows().length){toast("ไม่มีข้อมูลสำหรับดาวน์โหลด",true);return}
+    }
+    pendingExcelExport=kind;
+    $("#excelExportSub").textContent=kind==="registry"
+      ?"เลือกว่าจะให้ทะเบียนรายเดือนมีเลขบัตรประชาชนหรือไม่"
+      :"เลือกว่าจะให้รายงานข้อมูลผู้ป่วยมีเลขบัตรประชาชนหรือไม่";
+    $("#exportWithPid").hidden=auth?.role==="demo";
+    $("#excelExportOverlay").classList.add("show");
+  }
+  function runExcelExport(includePid){
+    const kind=pendingExcelExport;
+    closeExcelExportOptions();
+    if(kind==="registry")downloadMonthlyRegistryExcel(includePid);
+    else if(kind==="patient")downloadExcel(includePid);
+  }
+
+  function downloadMonthlyRegistryExcelLegacy(){
     if(!["admin","demo"].includes(auth?.role)){toast("บัญชีนี้ไม่มีสิทธิ์ดาวน์โหลดรายงาน",true);return}
     const allRows=monthlyRegistryRows(false),rows=monthlyRegistryRows(),month=$("#registryMonth").value,village=$("#registryVillage").value,status=$("#registryStatus")?.value||"all",statusLabel={all:"ทั้งหมด",recorded:"ได้รับการตรวจแล้ว",missing:"ยังไม่ได้ตรวจ"}[status];
     if(!rows.length){toast("ไม่มีข้อมูลสำหรับดาวน์โหลด",true);return}
@@ -1101,9 +1139,41 @@
     const blob=new Blob(["\ufeff",xml],{type:"application/vnd.ms-excel;charset=utf-8"}),link=document.createElement("a");link.href=URL.createObjectURL(blob);link.download=`ทะเบียนผู้ป่วย-${village?`หมู่-${village}`:"ทุกหมู่"}-${month}.xls`;document.body.appendChild(link);link.click();link.remove();setTimeout(()=>URL.revokeObjectURL(link.href),1000);toast(`ดาวน์โหลดทะเบียน ${rows.length} คนแล้ว`);
   }
 
-  function downloadExcel() {
-    if(!filtered.length){toast("ไม่มีข้อมูลสำหรับดาวน์โหลด",true);return}
+  function downloadMonthlyRegistryExcel(includePid=false){
+    if(!["admin","demo"].includes(auth?.role)){toast("บัญชีนี้ไม่มีสิทธิ์ดาวน์โหลดรายงาน",true);return}
+    const allRows=monthlyRegistryRows(false),rows=monthlyRegistryRows(),month=$("#registryMonth").value,village=$("#registryVillage").value,status=$("#registryStatus")?.value||"all";
+    if(!rows.length){toast("ไม่มีข้อมูลสำหรับดาวน์โหลด",true);return}
+    const statusLabel={all:"ทั้งหมด",recorded:"ได้รับการตรวจแล้ว",missing:"ยังไม่ได้ตรวจ"}[status];
     const columns=[
+      ["ลำดับ",(x,i)=>i+1],["เดือน",()=>monthLabel(month)],["หมู่",x=>x.patient.village],["HN",x=>x.patient.hn],
+      ...(includePid?[["เลขบัตรประชาชน",x=>String(x.patient.pid||"").replace(/\D/g,"")]]:[]),
+      ["ชื่อ",x=>x.patient.firstName],["สกุล",x=>x.patient.lastName],["วันเกิด (พ.ศ.)",x=>birthDateBE(x.patient.birthDate)],
+      ["เบอร์โทร",x=>x.patient.phone],["วันที่บันทึก",x=>x.visit?formatThaiDate(x.visit.recordDate):""],
+      ["น้ำหนัก",x=>x.visit?.weight||""],["ส่วนสูง",x=>x.visit?.height||""],["BMI",x=>x.visit?calculateBMI(x.visit.weight,x.visit.height):""],
+      ["รอบเอว",x=>x.visit?.waist||""],["ความดันครั้งที่ 1",x=>x.visit?.bp1||""],["ความดันครั้งที่ 2",x=>x.visit?.bp2||""],
+      ["ชีพจร",x=>x.visit?.pulse||""],["น้ำตาล",x=>x.visit?.bloodSugar||""],
+      ["ระดับน้ำตาล",x=>x.visit&&isYes(x.visit.dm??x.patient.dm)?levelMeta[sugarLevel(x.visit.bloodSugar)].label:""],
+      ["ระดับความดัน",x=>x.visit&&isYes(x.visit.ht??x.patient.ht)?levelMeta[bpLevel(x.visit.bp2||x.visit.bp1)].label:""],
+      ["วันนัดครั้งต่อไป",x=>x.visit?formatThaiDate(x.visit.appointmentDate):""],
+      ["การมาพบแพทย์ตามนัด",x=>x.visit?.appointmentStatus||"ยังไม่ประเมิน"],["ผลการลงบันทึก",x=>x.visit?"บันทึกแล้ว":"ยังไม่บันทึก"]
+    ];
+    const xe=value=>String(value??"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
+    const cell=(value,style="")=>`<Cell${style?` ss:StyleID="${style}"`:""}><Data ss:Type="String">${xe(value)}</Data></Cell>`;
+    const detailRows=rows.map((item,index)=>`<Row>${columns.map(column=>cell(column[1](item,index))).join("")}</Row>`).join("");
+    const recorded=allRows.filter(item=>item.visit).length;
+    const summary=`${monthLabel(month)} · ${village?`หมู่ ${village}`:"ทุกหมู่บ้าน"} · ผู้ป่วยทั้งหมด ${allRows.length} คน · ตรวจแล้ว ${recorded} คน · ยังไม่ตรวจ ${allRows.length-recorded} คน · รายการที่ดาวน์โหลด: ${statusLabel} ${rows.length} คน`;
+    const mergeAcross=columns.length-1;
+    const styles=`<Styles><Style ss:ID="Default"><Font ss:FontName="TH SarabunPSK" ss:Size="15"/><Alignment ss:Vertical="Center" ss:WrapText="1"/></Style><Style ss:ID="Title"><Font ss:FontName="TH SarabunPSK" ss:Size="18" ss:Bold="1" ss:Color="#FFFFFF"/><Interior ss:Color="#0F766E" ss:Pattern="Solid"/><Alignment ss:Horizontal="Center"/></Style><Style ss:ID="Summary"><Font ss:FontName="TH SarabunPSK" ss:Size="15" ss:Bold="1"/><Interior ss:Color="#E8F5F2" ss:Pattern="Solid"/></Style><Style ss:ID="Header"><Font ss:FontName="TH SarabunPSK" ss:Size="15" ss:Bold="1" ss:Color="#FFFFFF"/><Interior ss:Color="#0F766E" ss:Pattern="Solid"/><Alignment ss:Horizontal="Center" ss:WrapText="1"/></Style></Styles>`;
+    const xml=`<?xml version="1.0" encoding="UTF-8"?><?mso-application progid="Excel.Sheet"?><Workbook xmlns="urn:schemas-microsoft-com:office:spreadsheet" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns:ss="urn:schemas-microsoft-com:office:spreadsheet">${styles}<Worksheet ss:Name="ทะเบียนรายเดือน"><Table><Row ss:Height="30"><Cell ss:MergeAcross="${mergeAcross}" ss:StyleID="Title"><Data ss:Type="String">ทะเบียนผู้ป่วยรายหมู่ประจำเดือน</Data></Cell></Row><Row><Cell ss:MergeAcross="${mergeAcross}" ss:StyleID="Summary"><Data ss:Type="String">${xe(summary)}</Data></Cell></Row><Row>${columns.map(column=>cell(column[0],"Header")).join("")}</Row>${detailRows}</Table><WorksheetOptions xmlns="urn:schemas-microsoft-com:office:excel"><FreezePanes/><FrozenNoSplit/><SplitHorizontal>3</SplitHorizontal><TopRowBottomPane>3</TopRowBottomPane></WorksheetOptions></Worksheet></Workbook>`;
+    const blob=new Blob(["\ufeff",xml],{type:"application/vnd.ms-excel;charset=utf-8"}),link=document.createElement("a"),pidLabel=includePid?"มีเลขบัตร":"ไม่มีเลขบัตร";
+    link.href=URL.createObjectURL(blob);link.download=`ทะเบียนผู้ป่วย-${village?`หมู่-${village}`:"ทุกหมู่"}-${month}-${pidLabel}.xls`;
+    document.body.appendChild(link);link.click();link.remove();setTimeout(()=>URL.revokeObjectURL(link.href),1000);
+    toast(`ดาวน์โหลดทะเบียน ${rows.length} คนแล้ว (${pidLabel})`);
+  }
+
+  function downloadExcel(includePid=false) {
+    if(!filtered.length){toast("ไม่มีข้อมูลสำหรับดาวน์โหลด",true);return}
+    let columns=[
       ["ลำดับ",(_,i)=>i+1],["วันที่ลงข้อมูล",r=>r.recordDate],["HN",r=>r.hn],
       ["ชื่อ",r=>r.firstName],["สกุล",r=>r.lastName],["วันเดือนปีเกิด (พ.ศ.)",r=>birthDateBE(r.birthDate)],
       ["อายุ",r=>r.age],["เบอร์โทรศัพท์",r=>r.phone],["บ้านเลขที่",r=>r.houseNo],
@@ -1113,6 +1183,7 @@
       ["รับยาที่",r=>r.medicationAt],["DM",r=>r.dm],["HT",r=>r.ht],["Old CVA",r=>r.oldCva],
       ["Hyperlipidaemia",r=>r.hyperlipidaemia],["CKD ระยะ",r=>r.ckdStage],["ชีตเดือน",r=>r._sheet]
     ];
+    if(includePid)columns.splice(3,0,["เลขบัตรประชาชน",r=>String(r.pid||"").replace(/\D/g,"")]);
     const xe=v=>String(v??"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
     const cell=(v,head=false)=>`<Cell${head?' ss:StyleID="Header"':""}><Data ss:Type="String">${xe(v)}</Data></Cell>`;
     const rows=[`<Row>${columns.map(c=>cell(c[0],true)).join("")}</Row>`]
@@ -1131,9 +1202,10 @@
  </Worksheet></Workbook>`;
     const blob=new Blob(["\ufeff",xml],{type:"application/vnd.ms-excel;charset=utf-8"});
     const link=document.createElement("a"), month=$("#monthFilter").value||"ทั้งหมด";
-    link.href=URL.createObjectURL(blob); link.download=`ทะเบียน-DM-HT-${month}-${todayInput()}.xls`;
+    const pidLabel=includePid?"มีเลขบัตร":"ไม่มีเลขบัตร";
+    link.href=URL.createObjectURL(blob); link.download=`ทะเบียน-DM-HT-${month}-${pidLabel}-${todayInput()}.xls`;
     document.body.appendChild(link); link.click(); link.remove(); setTimeout(()=>URL.revokeObjectURL(link.href),1000);
-    toast(`ดาวน์โหลด ${filtered.length} รายการแล้ว`);
+    toast(`ดาวน์โหลด ${filtered.length} รายการแล้ว (${pidLabel})`);
   }
 
   function downloadVillageSummaryExcel() {
@@ -1408,6 +1480,10 @@ ${worksheet("สรุปค่าน้ำตาล",summaryTable("sugar"))}${w
   document.querySelectorAll("[data-referral-close]").forEach(b=>b.addEventListener("click",()=>$("#referralOverlay").classList.remove("show")));
   document.querySelectorAll("[data-referral-patients-close]").forEach(b=>b.addEventListener("click",()=>$("#referralPatientsOverlay").classList.remove("show")));
   document.querySelectorAll("[data-visit-files-close]").forEach(b=>b.addEventListener("click",()=>$("#visitFilesOverlay").classList.remove("show")));
+  document.querySelectorAll("[data-excel-export-close]").forEach(b=>b.addEventListener("click",closeExcelExportOptions));
+  $("#exportWithoutPid").addEventListener("click",()=>runExcelExport(false));
+  $("#exportWithPid").addEventListener("click",()=>runExcelExport(true));
+  $("#excelExportOverlay").addEventListener("click",e=>{if(e.target===e.currentTarget)closeExcelExportOptions()});
   $("#openCpgPreview").addEventListener("click",()=>$("#cpgPreviewOverlay").classList.add("show"));
   document.querySelectorAll("[data-cpg-close]").forEach(b=>b.addEventListener("click",()=>$("#cpgPreviewOverlay").classList.remove("show")));
 
@@ -1510,15 +1586,15 @@ ${worksheet("สรุปค่าน้ำตาล",summaryTable("sugar"))}${w
     }catch(err){toast("นำเข้า PID ไม่สำเร็จ: "+err.message,true)}finally{btn.disabled=false;btn.textContent=label;e.target.value=""}
   });
   $("#mobileAddBtn").addEventListener("click",()=>openForm());
-  $("#exportBtn").addEventListener("click",downloadExcel);
+  $("#exportBtn").addEventListener("click",()=>openExcelExportOptions("patient"));
   $("#summaryExportBtn").addEventListener("click",downloadVillageSummaryExcel);
-  $("#reportPatientBtn").addEventListener("click",downloadExcel);
+  $("#reportPatientBtn").addEventListener("click",()=>openExcelExportOptions("patient"));
   $("#reportVillageBtn").addEventListener("click",downloadVillageSummaryExcel);
   $("#reportReferralBtn").addEventListener("click",downloadReferralExcel);
   $("#registryMonth").addEventListener("change",renderMonthlyRegistry);
   $("#registryVillage").addEventListener("change",renderMonthlyRegistry);
   $("#registryStatus").addEventListener("change",renderMonthlyRegistry);
-  $("#downloadRegistryBtn").addEventListener("click",downloadMonthlyRegistryExcel);
+  $("#downloadRegistryBtn").addEventListener("click",()=>openExcelExportOptions("registry"));
   $("#managementMonth").addEventListener("change",renderManagementReport);
   $("#managementVillage").addEventListener("change",renderManagementReport);
   $("#sugarChartMonth").addEventListener("change",renderMonthlySugarChart);
@@ -1555,7 +1631,7 @@ ${worksheet("สรุปค่าน้ำตาล",summaryTable("sugar"))}${w
     input.dispatchEvent(new Event("input",{bubbles:true}));
   });
   $("#closeRedAlert").addEventListener("click",()=>$("#redScreen").classList.remove("show"));
-  document.addEventListener("keydown",e=>{if(e.key==="Escape"){closeForm();$("#deleteOverlay").classList.remove("show");$("#colorPatientsOverlay").classList.remove("show");$("#loginOverlay").classList.remove("show");$("#passwordOverlay").classList.remove("show");$("#referralOverlay").classList.remove("show");$("#referralPatientsOverlay").classList.remove("show");$("#visitFilesOverlay").classList.remove("show");$("#cpgPreviewOverlay").classList.remove("show")}});
+  document.addEventListener("keydown",e=>{if(e.key==="Escape"){closeForm();closeExcelExportOptions();$("#deleteOverlay").classList.remove("show");$("#colorPatientsOverlay").classList.remove("show");$("#loginOverlay").classList.remove("show");$("#passwordOverlay").classList.remove("show");$("#referralOverlay").classList.remove("show");$("#referralPatientsOverlay").classList.remove("show");$("#visitFilesOverlay").classList.remove("show");$("#cpgPreviewOverlay").classList.remove("show")}});
   window.addEventListener("pageshow",e=>{if(e.persisted)location.reload()});
   $("#loginForm").reset();
   restoreSession();
