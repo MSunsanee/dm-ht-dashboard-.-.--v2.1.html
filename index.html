@@ -265,6 +265,8 @@
         <button class="btn btn-soft" id="changePasswordBtn" style="display:none">🔑 เปลี่ยนรหัสผ่าน</button>
         <button class="btn btn-danger" id="clearDayBtn" style="display:none">⌫ ล้างข้อมูลวันที่ทดสอบ</button>
         <button class="btn btn-soft" id="repairRegistryBtn" style="display:none">↥ นำเข้ารายชื่อจาก Excel</button>
+        <input id="pidExcelFile" type="file" accept=".xlsx,.xls,.xlsm" hidden>
+        <button class="btn btn-soft" id="importPidBtn" style="display:none">นำเข้าเลขบัตรจาก Excel</button>
         <button class="btn btn-soft" id="exportBtn">⇩ ดาวน์โหลด Excel</button>
         <button class="btn btn-soft" id="summaryExportBtn">⇩ สรุปรายหมู่</button>
         <button class="btn btn-soft" id="referralBtn">⇄ ส่งต่อ–รับกลับ</button>
@@ -421,6 +423,7 @@
         <div class="field"><label>HN</label><input name="hn" inputmode="numeric" placeholder="หากไม่ระบุ ระบบจะสร้างรหัสชั่วคราว"></div>
         <div class="field"><label>ชื่อ <span class="required-star">*</span></label><input name="firstName" required></div>
         <div class="field"><label>สกุล <span class="required-star">*</span></label><input name="lastName" required></div>
+        <div class="field"><label>เลขบัตรประชาชน (PID)</label><input name="pid" inputmode="numeric" autocomplete="off" maxlength="13" pattern="[0-9]{13}" placeholder="กรอกเลข 13 หลัก หากมี"></div>
         <div class="field"><label>วันเดือนปีเกิด (พ.ศ.)</label><input name="birthDate" inputmode="text" placeholder="เช่น 15/08/2503" enterkeyhint="next"></div>
         <div class="field"><label>อายุ (คำนวณอัตโนมัติ)</label><input name="age" type="number" min="0" max="130" readonly></div>
         <div class="field"><label>เบอร์โทรศัพท์</label><input name="phone" type="tel" inputmode="tel" placeholder="เช่น 0812345678"></div>
@@ -494,19 +497,18 @@
 
 <script>
   const GAS_URL = "https://script.google.com/macros/s/AKfycbx9y2f2fVFf2dGYV1LDuC9xISrqghO0vDg0PZjLE5ILkN0Nxf6utz3gAKCqqkIdoMt2/exec";
-  const REQUIRED_API_VERSION = 26;
+  const REQUIRED_API_VERSION = 28;
   const PAGE_SIZE = 20;
-  const fields = ["recordDate","hn","firstName","lastName","birthDate","age","phone","houseNo","village","weight","height","waist","bp1","bp2","pulse","bloodSugar","appointmentDate","appointmentStatus","medicationAt","dm","ht","oldCva","hyperlipidaemia","ckdStage"];
-  let records = [], filtered = [], dashboardData = [], referrals = [], activeReferralHNs = [], referralEvents = [], currentMonthlySugar = [], currentMonthlyBP = [], publicSummary = {}, page = 1, editing = null, deleting = null, auth = null, formMode = "basic", loadPromise = null, queueMode = "all";
+  const fields = ["recordDate","hn","firstName","lastName","pid","birthDate","age","phone","houseNo","village","weight","height","waist","bp1","bp2","pulse","bloodSugar","appointmentDate","appointmentStatus","medicationAt","dm","ht","oldCva","hyperlipidaemia","ckdStage"];
+  let records = [], filtered = [], dashboardData = [], referrals = [], activeReferralHNs = [], referralEvents = [], currentMonthlySugar = [], currentMonthlyBP = [], publicSummary = {}, page = 1, editing = null, deleting = null, auth = null, formMode = "basic", loadPromise = null, queueMode = "all", sessionRestoreTimer = null;
 
   const $ = (s) => document.querySelector(s);
-  const storageGet = key => { try{return sessionStorage.getItem(key)||""}catch{return ""} };
-  const storageSet = (key,value) => { try{sessionStorage.setItem(key,value)}catch{} };
-  const storageRemove = key => { try{sessionStorage.removeItem(key)}catch{} };
+  const storageGet = key => { try{return localStorage.getItem(key)||""}catch{return ""} };
+  const storageSet = (key,value) => { try{localStorage.setItem(key,value)}catch{} };
+  const storageRemove = key => { try{localStorage.removeItem(key)}catch{} };
   const preferenceGet = key => { try{return localStorage.getItem(key)||""}catch{return ""} };
   const preferenceSet = (key,value) => { try{localStorage.setItem(key,value)}catch{} };
-  const PUBLIC_SUMMARY_CACHE="dmht_public_summary_v1";
-  let exitLogoutSent=false;
+  const PUBLIC_SUMMARY_CACHE="dmht_public_summary_v2";
   function sendServerLogout(token){
     const clean=String(token||"").trim();if(!clean)return;
     const body=JSON.stringify({action:"logout",token:clean});
@@ -517,12 +519,6 @@
       }
     }catch{}
     try{fetch(GAS_URL,{method:"POST",mode:"no-cors",cache:"no-store",keepalive:true,headers:{"Content-Type":"text/plain;charset=UTF-8"},body})}catch{}
-  }
-  function secureLogoutOnExit(){
-    const token=auth?.token||storageGet("dmht_token");
-    auth=null;storageRemove("dmht_token");
-    try{$("#loginForm")?.reset()}catch{}
-    if(token&&!exitLogoutSent){exitLogoutSent=true;sendServerLogout(token)}
   }
   function cachedPublicSummary(){try{const saved=JSON.parse(preferenceGet(PUBLIC_SUMMARY_CACHE)||"null");return saved&&saved.summary? saved.summary:null}catch{return null}}
   function showCachedPublicSummary(){const summary=cachedPublicSummary();if(!summary)return false;publicSummary=summary;renderSummary(summary);renderPublicPresentation(summary);setStatus("","แสดงข้อมูลล่าสุดที่บันทึกไว้ · กำลังอัปเดต");return true}
@@ -731,7 +727,7 @@
     try{
       const result=await api("summary");
       publicSummary=result.summary||{};preferenceSet(PUBLIC_SUMMARY_CACHE,JSON.stringify({savedAt:Date.now(),summary:publicSummary}));renderSummary(publicSummary);renderPublicPresentation(publicSummary);
-      if(Number(result.apiVersion||0)<REQUIRED_API_VERSION){setStatus("bad","ต้อง Deploy GAS เวอร์ชันใหม่");toast("กรุณา Deploy Code.gs เวอร์ชัน 26 เพื่อใช้การสรุปผลตามกลุ่มโรค",true)}
+      if(Number(result.apiVersion||0)<REQUIRED_API_VERSION){setStatus("bad","ต้อง Deploy GAS เวอร์ชันใหม่");toast("กรุณา Deploy Code.gs เวอร์ชัน 28 เพื่อปรับสรุป Dashboard",true)}
       else setStatus("ok","ข้อมูลภาพรวมล่าสุด");
     }catch(err){
       setStatus("bad","โหลดภาพรวมไม่สำเร็จ");
@@ -1271,7 +1267,7 @@ ${worksheet("สรุปค่าน้ำตาล",summaryTable("sugar"))}${w
   };
 
   function setAuthenticated(profile,token) {
-    exitLogoutSent=false;
+    if(sessionRestoreTimer){clearTimeout(sessionRestoreTimer);sessionRestoreTimer=null}
     auth={...profile,token};
     document.body.classList.remove("public-mode");
     document.body.classList.toggle("village-user",profile.role==="village");
@@ -1286,6 +1282,7 @@ ${worksheet("สรุปค่าน้ำตาล",summaryTable("sugar"))}${w
     $("#formatSheetBtn").style.display=profile.role==="admin"?"inline-flex":"none";
     $("#clearDayBtn").style.display=profile.role==="admin"?"inline-flex":"none";
     $("#repairRegistryBtn").style.display=profile.role==="admin"?"inline-flex":"none";
+    $("#importPidBtn").style.display=profile.role==="admin"?"inline-flex":"none";
     $("#changePasswordBtn").style.display=profile.role==="admin"?"inline-flex":"none";
     $("#lineTestBtn").style.display=profile.role==="admin"?"inline-flex":"none";
     $("#referralBtn").style.display=["admin","viewer","staff","demo"].includes(profile.role)?"inline-flex":"none";
@@ -1314,6 +1311,7 @@ ${worksheet("สรุปค่าน้ำตาล",summaryTable("sugar"))}${w
     $("#formatSheetBtn").style.display="none";
     $("#clearDayBtn").style.display="none";
     $("#repairRegistryBtn").style.display="none";
+    $("#importPidBtn").style.display="none";
     $("#changePasswordBtn").style.display="none";
     $("#lineTestBtn").style.display="none";
     $("#addBtn").style.display="none";
@@ -1328,9 +1326,21 @@ ${worksheet("สรุปค่าน้ำตาล",summaryTable("sugar"))}${w
   }
   async function restoreSession() {
     const token=storageGet("dmht_token");
-    storageRemove("dmht_token");
-    if(token)sendServerLogout(token);
-    showLoggedOut({invalidate:false});
+    if(!token){showLoggedOut({invalidate:false});return}
+    try{
+      const result=await api("session");
+      auth={...result.user,token};
+      document.body.classList.remove("public-mode");
+      document.body.classList.toggle("village-user",auth.role==="village");
+      setAuthenticated(result.user,token);
+    }catch(err){
+      const message=String(err?.message||"");
+      const invalid=/เซสชันหมดอายุ|เซสชันถูกยกเลิก|บัญชีผู้ใช้นี้ถูกยกเลิก|กรุณาเข้าสู่ระบบ|session expired|invalid session|account.*revoked/i.test(message);
+      if(invalid){showLoggedOut({invalidate:false});return}
+      // Keep the saved token during a temporary network/GAS failure and retry session recovery.
+      setStatus("bad","เชื่อมต่อไม่ได้ · กำลังลองกู้คืนการเข้าสู่ระบบ");
+      if(!sessionRestoreTimer)sessionRestoreTimer=setTimeout(()=>{sessionRestoreTimer=null;restoreSession()},5000);
+    }
   }
   $("#loginForm").addEventListener("submit",async e=>{
     e.preventDefault();const form=e.currentTarget,btn=$("#loginSubmit"),fd=new FormData(form);
@@ -1437,6 +1447,34 @@ ${worksheet("สรุปค่าน้ำตาล",summaryTable("sugar"))}${w
     try{const result=await api("importseed");toast(result.message);await loadData()}
     catch(err){toast("นำเข้าทะเบียนไม่สำเร็จ: "+err.message,true)}finally{btn.disabled=false}
   });
+  $("#importPidBtn").addEventListener("click",()=>$("#pidExcelFile").click());
+  $("#pidExcelFile").addEventListener("change",async e=>{
+    const file=e.target.files?.[0];if(!file)return;
+    const btn=$("#importPidBtn"),label=btn.textContent;btn.disabled=true;btn.textContent="กำลังอ่านไฟล์…";
+    try{
+      const XLSX=await loadSheetJS(),book=XLSX.read(await file.arrayBuffer(),{type:"array",cellText:true,cellDates:false});
+      const rows=[];
+      for(const sheetName of book.SheetNames){
+        const matrix=XLSX.utils.sheet_to_json(book.Sheets[sheetName],{header:1,defval:"",raw:false});
+        let headerAt=-1,cols={};
+        for(let r=0;r<Math.min(matrix.length,20);r++){
+          const h=matrix[r].map(x=>String(x||"").trim().toLowerCase());
+          cols={first:h.findIndex(x=>x.includes("ชื่อ")&&!x.includes("นามสกุล")),last:h.findIndex(x=>x.includes("นามสกุล")||x.includes("สกุล")),pid:h.findIndex(x=>x.includes("บัตร")||x==="pid"||x.includes("ประชาชน"))};
+          if(cols.first>=0&&cols.last>=0&&cols.pid>=0){headerAt=r;break}
+        }
+        if(headerAt<0)continue;
+        for(const row of matrix.slice(headerAt+1)){
+          const firstName=String(row[cols.first]||"").trim(),lastName=String(row[cols.last]||"").trim(),pid=String(row[cols.pid]||"").replace(/\D/g,"");
+          if(firstName&&lastName&&pid)rows.push({firstName,lastName,pid});
+        }
+        if(rows.length)break;
+      }
+      if(!rows.length)throw new Error("ไม่พบหัวคอลัมน์ชื่อ สกุล และเลขบัตรประชาชนในไฟล์");
+      if(!confirm(`พบข้อมูล ${rows.length} รายการ ระบบจะเติม PID ให้เฉพาะชื่อและสกุลที่ตรงกับทะเบียนหลักเพียงคนเดียว และจะไม่เขียนทับ PID เดิมที่ไม่ตรงกัน ดำเนินการหรือไม่?`))return;
+      btn.textContent="กำลังนำเข้า…";const result=await api("importpids",{rows});
+      toast(`นำเข้า PID สำเร็จ ${result.updated} ราย · ไม่พบ ${result.missing} · ชื่อซ้ำ ${result.ambiguous} · ขัดแย้งกับข้อมูลเดิม ${result.conflict}`);await loadData();
+    }catch(err){toast("นำเข้า PID ไม่สำเร็จ: "+err.message,true)}finally{btn.disabled=false;btn.textContent=label;e.target.value=""}
+  });
   $("#mobileAddBtn").addEventListener("click",()=>openForm());
   $("#exportBtn").addEventListener("click",downloadExcel);
   $("#summaryExportBtn").addEventListener("click",downloadVillageSummaryExcel);
@@ -1484,7 +1522,6 @@ ${worksheet("สรุปค่าน้ำตาล",summaryTable("sugar"))}${w
   });
   $("#closeRedAlert").addEventListener("click",()=>$("#redScreen").classList.remove("show"));
   document.addEventListener("keydown",e=>{if(e.key==="Escape"){closeForm();$("#deleteOverlay").classList.remove("show");$("#colorPatientsOverlay").classList.remove("show");$("#loginOverlay").classList.remove("show");$("#passwordOverlay").classList.remove("show");$("#referralOverlay").classList.remove("show");$("#referralPatientsOverlay").classList.remove("show");$("#visitFilesOverlay").classList.remove("show");$("#cpgPreviewOverlay").classList.remove("show")}});
-  window.addEventListener("pagehide",secureLogoutOnExit,{capture:true});
   window.addEventListener("pageshow",e=>{if(e.persisted)location.reload()});
   $("#loginForm").reset();
   restoreSession();
