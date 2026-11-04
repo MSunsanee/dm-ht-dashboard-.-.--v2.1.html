@@ -264,7 +264,7 @@
         <button class="btn btn-soft" id="formatSheetBtn" style="display:none">▦ จัดรูปแบบ GS</button>
         <button class="btn btn-soft" id="changePasswordBtn" style="display:none">🔑 เปลี่ยนรหัสผ่าน</button>
         <button class="btn btn-danger" id="clearDayBtn" style="display:none">⌫ ล้างข้อมูลวันที่ทดสอบ</button>
-        <button class="btn btn-soft" id="repairRegistryBtn" style="display:none">↥ นำเข้ารายชื่อจาก Excel</button>
+        <button class="btn btn-soft" id="repairRegistryBtn" style="display:none">↻ โหลดรายชื่อจาก GS</button>
         <input id="pidExcelFile" type="file" accept=".xlsx,.xls,.xlsm" hidden>
         <button class="btn btn-soft" id="importPidBtn" style="display:none">นำเข้าเลขบัตรจาก Excel</button>
         <button class="btn btn-soft" id="exportBtn">⇩ ดาวน์โหลด Excel</button>
@@ -1442,10 +1442,9 @@ ${worksheet("สรุปค่าน้ำตาล",summaryTable("sugar"))}${w
     }finally{btn.disabled=false;btn.textContent="⌫ ล้างข้อมูลวันที่ทดสอบ"}
   });
   $("#repairRegistryBtn").addEventListener("click",async()=>{
-    if(!confirm("นำเข้าข้อมูลพื้นฐานจากไฟล์ที่ถูกต้อง 131 แถวหรือไม่?\nระบบจะรวมแถวชื่อซ้ำ 1 แถว เหลือผู้ป่วยจริงไม่ซ้ำ 130 คน เรียงตามหมู่ และสำรองชีต รวม ก่อนดำเนินการ"))return;
     const btn=$("#repairRegistryBtn");btn.disabled=true;
-    try{const result=await api("importseed");toast(result.message);await loadData()}
-    catch(err){toast("นำเข้าทะเบียนไม่สำเร็จ: "+err.message,true)}finally{btn.disabled=false}
+    try{await loadData();toast("โหลดรายชื่อจากทะเบียน Google Sheets ปัจจุบันแล้ว")}
+    catch(err){toast("โหลดรายชื่อจาก Google Sheets ไม่สำเร็จ: "+err.message,true)}finally{btn.disabled=false}
   });
   $("#importPidBtn").addEventListener("click",()=>$("#pidExcelFile").click());
   $("#pidExcelFile").addEventListener("change",async e=>{
