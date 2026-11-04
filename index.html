@@ -497,10 +497,42 @@
 
 <script>
   const GAS_URL = "https://script.google.com/macros/s/AKfycbx9y2f2fVFf2dGYV1LDuC9xISrqghO0vDg0PZjLE5ILkN0Nxf6utz3gAKCqqkIdoMt2/exec";
-  const REQUIRED_API_VERSION = 29;
+  const REQUIRED_API_VERSION = 32;
   const PAGE_SIZE = 20;
   const fields = ["recordDate","hn","firstName","lastName","pid","birthDate","age","phone","houseNo","village","weight","height","waist","bp1","bp2","pulse","bloodSugar","appointmentDate","appointmentStatus","medicationAt","dm","ht","oldCva","hyperlipidaemia","ckdStage"];
   let records = [], filtered = [], dashboardData = [], referrals = [], activeReferralHNs = [], referralEvents = [], currentMonthlySugar = [], currentMonthlyBP = [], publicSummary = {}, page = 1, editing = null, deleting = null, auth = null, formMode = "basic", loadPromise = null, queueMode = "all", sessionRestoreTimer = null;
+  const SHEETJS_URLS = [
+    "https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js",
+    "https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"
+  ];
+  let sheetJSLoadPromise = null;
+
+  function injectSheetJSScript(url) {
+    return new Promise((resolve,reject) => {
+      const script=document.createElement("script");
+      script.src=url;script.async=true;script.referrerPolicy="no-referrer";
+      script.onload=()=>{
+        if(window.XLSX) resolve(window.XLSX);
+        else {script.remove();reject(new Error("โหลดไลบรารีแล้วแต่ไม่พบ XLSX"))}
+      };
+      script.onerror=()=>{script.remove();reject(new Error("โหลด "+url+" ไม่สำเร็จ"))};
+      document.head.appendChild(script);
+    });
+  }
+
+  async function loadSheetJS() {
+    if(window.XLSX) return window.XLSX;
+    if(sheetJSLoadPromise) return sheetJSLoadPromise;
+    sheetJSLoadPromise=(async()=>{
+      let lastError=null;
+      for(const url of SHEETJS_URLS){
+        try{return await injectSheetJSScript(url)}catch(error){lastError=error}
+      }
+      throw new Error("ไม่สามารถโหลดตัวอ่าน Excel ได้ กรุณาตรวจอินเทอร์เน็ตแล้วลองใหม่"+(lastError?" ("+lastError.message+")":""));
+    })();
+    try{return await sheetJSLoadPromise}
+    catch(error){sheetJSLoadPromise=null;throw error}
+  }
 
   const $ = (s) => document.querySelector(s);
   const storageGet = key => { try{return localStorage.getItem(key)||""}catch{return ""} };
@@ -642,6 +674,7 @@
     const date=new Date(value);return Number.isNaN(date.getTime())?"":`${date.getFullYear()}-${String(date.getMonth()+1).padStart(2,"0")}-${String(date.getDate()).padStart(2,"0")}`;
   };
   const patientQueueKey = r => [String(r.firstName||"").trim().toLowerCase(),String(r.lastName||"").trim().toLowerCase(),String(r.village||"").trim()].join("|");
+  const registryPatients = list => (list||[]).filter(r=>r._sheet==="รวม"&&(String(r.hn||"").trim()||String(r.firstName||"").trim()||String(r.lastName||"").trim()));
   const monthLabel = value => {
     const match=String(value).match(/^(\d{4})-(\d{2})$/);
     if(!match) return value;
@@ -727,7 +760,7 @@
     try{
       const result=await api("summary");
       publicSummary=result.summary||{};preferenceSet(PUBLIC_SUMMARY_CACHE,JSON.stringify({savedAt:Date.now(),summary:publicSummary}));renderSummary(publicSummary);renderPublicPresentation(publicSummary);
-      if(Number(result.apiVersion||0)<REQUIRED_API_VERSION){setStatus("bad","ต้อง Deploy GAS เวอร์ชันใหม่");toast("กรุณา Deploy Code.gs เวอร์ชัน 29 เพื่อปรับตำแหน่งคอลัมน์ทะเบียน",true)}
+      if(Number(result.apiVersion||0)<REQUIRED_API_VERSION){setStatus("bad","ต้อง Deploy GAS เวอร์ชันใหม่");toast("กรุณา Deploy Code.gs เวอร์ชัน 32 เพื่อรองรับการตรวจ PID ซ้ำก่อนนำเข้า",true)}
       else setStatus("ok","ข้อมูลภาพรวมล่าสุด");
     }catch(err){
       setStatus("bad","โหลดภาพรวมไม่สำเร็จ");
@@ -793,7 +826,7 @@
       records = hydrateMasterDemographics(records);
       // records includes both master patients and monthly visit rows.  The
       // signed-in status must show unique patients, not the raw row count.
-      const masterCount=records.filter(r=>r._sheet==="รวม").length;
+      const masterCount=registryPatients(records).length;
       const patientCount=masterCount||new Set(records.map(patientQueueKey).filter(k=>k!=="||")).size;
       setStatus("ok", `เข้าสู่ระบบแล้ว · ${patientCount} ราย`);
       buildFilters();if(auth?.role==="village")$("#monthFilter").value="รวม";applyFilters();buildReferralMonths();renderReferrals();buildManagementFilters();buildMonthlyRegistryFilters();
@@ -864,7 +897,8 @@
     $("#prevBtn").disabled=page<=1; $("#nextBtn").disabled=page>=pages;
   }
   function updateDashboard(data=records) {
-    const patientMap=new Map();data.forEach(r=>{const key=`${String(r.firstName||"").trim().toLowerCase()}|${String(r.lastName||"").trim().toLowerCase()}`;if(key!=="|"&&(!patientMap.has(key)||r._sheet==="รวม"))patientMap.set(key,r)});const selectedDateForTarget=$("#queueDate")?.value||preferenceGet("dmht_record_date")||todayInput(),selectedMonthForTarget=String(selectedDateForTarget).slice(0,7),carriedReferralSet=activeReferralSetForMonth(selectedMonthForTarget),patients=[...patientMap.values()].filter(r=>!carriedReferralSet.has(String(r.hn||"")));
+    const patients=registryPatients(data);
+    const selectedDateForTarget=$("#queueDate")?.value||preferenceGet("dmht_record_date")||todayInput(),selectedMonthForTarget=String(selectedDateForTarget).slice(0,7),carriedReferralSet=activeReferralSetForMonth(selectedMonthForTarget);
     $("#kpiTotal").textContent=patients.length.toLocaleString("th-TH");
     $("#kpiDM").textContent=patients.filter(r=>isYes(r.dm)).length.toLocaleString("th-TH");
     $("#kpiHT").textContent=patients.filter(r=>isYes(r.ht)).length.toLocaleString("th-TH");
@@ -874,8 +908,8 @@
     const groups={},checkedGroups={};patients.forEach(r=>{const v=String(r.village??"").trim();if(v)groups[v]=(groups[v]||0)+1});selectedVisits.forEach(r=>{const v=String(r.village??"").trim();if(v)checkedGroups[v]=(checkedGroups[v]||0)+1});
     const villages=Object.entries(groups).sort((a,b)=>Number(a[0])-Number(b[0])||a[0].localeCompare(b[0],"th")).map(([v,count])=>({village:v,count,checked:checkedGroups[v]||0}));
     renderVillageCoverage(villages,from||to?`${from?formatThaiDate(from):"เริ่มต้น"} ถึง ${to?formatThaiDate(to):"ปัจจุบัน"}`:`เดือน ${monthLabel(selectedMonth)}`);
-    const ranges=[["<40",0,39],["40–49",40,49],["50–59",50,59],["60–69",60,69],["70–79",70,79],["80+",80,999]];
-    const ages=patients.map(r=>Number(r.age)).filter(n=>Number.isFinite(n)&&n>0), counts=ranges.map(x=>ages.filter(a=>a>=x[1]&&a<=x[2]).length);
+    const ranges=[["<40",0,39],["40–49",40,49],["50–59",50,59],["60–69",60,69],["70–79",70,79],["80+",80,130],["ไม่ระบุ",null,null]];
+    const ages=patients.map(r=>Number(r.age)).filter(n=>Number.isFinite(n)&&n>0&&n<=130), counts=ranges.map(x=>x[1]===null?patients.length-ages.length:ages.filter(a=>a>=x[1]&&a<=x[2]).length);
     const amax=Math.max(1,...counts);
     $("#ageChart").innerHTML=ranges.map((x,i)=>`<div class="age-col"><div class="age-num">${counts[i]}</div><div class="age-bar" style="height:${Math.max(3,counts[i]/amax*155)}px"></div><div class="age-label">${x[0]}</div></div>`).join("");
     $("#avgAge").textContent=ages.length?`เฉลี่ย ${Math.round(ages.reduce((a,b)=>a+b,0)/ages.length)} ปี`:"เฉลี่ย – ปี";
@@ -1014,7 +1048,7 @@
     $("#colorPatientsOverlay").classList.add("show");
   };
 
-  const registryPatientKey=r=>String(r.hn||"").trim()?`hn:${String(r.hn).trim()}`:`name:${patientQueueKey(r)}`;
+  const registryPatientKey=r=>{const hn=String(r.hn||"").trim(),name=patientQueueKey(r);return hn?`hn:${hn}|name:${name}`:`name:${name}`};
   function hydrateMasterDemographics(list){
     const profileKey=r=>{const name=`${String(r.firstName||"").trim()}|${String(r.lastName||"").trim()}`;return name!=="|"?`name:${name}`:`hn:${String(r.hn||"").trim()}`};
     const profiles=new Map();
@@ -1469,9 +1503,9 @@ ${worksheet("สรุปค่าน้ำตาล",summaryTable("sugar"))}${w
         if(rows.length)break;
       }
       if(!rows.length)throw new Error("ไม่พบหัวคอลัมน์ชื่อ สกุล และเลขบัตรประชาชนในไฟล์");
-      if(!confirm(`พบข้อมูล ${rows.length} รายการ ระบบจะเติม PID ให้เฉพาะชื่อและสกุลที่ตรงกับทะเบียนหลักเพียงคนเดียว และจะไม่เขียนทับ PID เดิมที่ไม่ตรงกัน ดำเนินการหรือไม่?`))return;
+      if(!confirm(`พบข้อมูล ${rows.length} รายการ ระบบจะตรวจเลข 13 หลัก ตรวจ PID ซ้ำทั้งในไฟล์และทะเบียน แล้วเติมเฉพาะชื่อและสกุลที่ตรงกับทะเบียนหลักเพียงคนเดียว โดยไม่เขียนทับข้อมูลเดิมที่ขัดแย้งกัน ดำเนินการหรือไม่?`))return;
       btn.textContent="กำลังนำเข้า…";const result=await api("importpids",{rows});
-      toast(`นำเข้า PID สำเร็จ ${result.updated} ราย · ไม่พบ ${result.missing} · ชื่อซ้ำ ${result.ambiguous} · ขัดแย้งกับข้อมูลเดิม ${result.conflict}`);await loadData();
+      toast(`นำเข้า PID ที่ปลอดภัย ${result.updated} ราย · มีอยู่แล้ว ${result.unchanged} · PID ไม่ถูกต้อง ${result.invalid} · PID ซ้ำในไฟล์ ${result.duplicateSource} ราย (${result.duplicateSourceValues} PID) · PID ถูกใช้กับผู้อื่นแล้ว ${result.duplicateRegistry} · ไม่พบชื่อ ${result.missing} · ชื่อซ้ำ ${result.ambiguous} · ขัดแย้งกับ PID เดิม ${result.conflict}`);await loadData();
     }catch(err){toast("นำเข้า PID ไม่สำเร็จ: "+err.message,true)}finally{btn.disabled=false;btn.textContent=label;e.target.value=""}
   });
   $("#mobileAddBtn").addEventListener("click",()=>openForm());
